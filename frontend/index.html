@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chord Progression Player</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎵 Chord Progression Player</h1>
+            <p class="subtitle">Your programmable backing band</p>
+        </header>
+
+        <main>
+            <!-- BPM Control -->
+            <section class="bpm-section">
+                <h2>Tempo Control</h2>
+                <div class="bpm-control">
+                    <label for="bpm-slider">BPM: <span id="bpm-value">120</span></label>
+                    <input type="range" id="bpm-slider" min="30" max="300" value="120">
+                </div>
+            </section>
+
+            <!-- Chord Progression Builder -->
+            <section class="progression-section">
+                <h2>Chord Progression</h2>
+                <div id="progression-container" class="progression-container">
+                    <!-- Chord slots will be added here -->
+                </div>
+                <button id="add-chord-btn" class="btn btn-secondary">+ Add Chord</button>
+            </section>
+
+            <!-- Chord Picker Modal -->
+            <div id="chord-picker-modal" class="modal">
+                <div class="modal-content">
+                    <h3>Choose a Chord</h3>
+                    <div class="chord-picker">
+                        <div class="picker-group">
+                            <label>Root Note:</label>
+                            <select id="root-picker">
+                                <option value="C">C</option>
+                                <option value="C#">C#</option>
+                                <option value="D">D</option>
+                                <option value="D#">D#</option>
+                                <option value="E">E</option>
+                                <option value="F">F</option>
+                                <option value="F#">F#</option>
+                                <option value="G">G</option>
+                                <option value="G#">G#</option>
+                                <option value="A">A</option>
+                                <option value="A#">A#</option>
+                                <option value="B">B</option>
+                            </select>
+                        </div>
+                        <div class="picker-group">
+                            <label>Chord Type:</label>
+                            <select id="type-picker">
+                                <option value="Major">Major</option>
+                                <option value="Minor">Minor</option>
+                                <option value="7">7</option>
+                                <option value="Maj7">Maj7</option>
+                                <option value="Min7">Min7</option>
+                                <option value="Dim">Dim</option>
+                                <option value="Aug">Aug</option>
+                                <option value="Sus2">Sus2</option>
+                                <option value="Sus4">Sus4</option>
+                            </select>
+                        </div>
+                        <div class="picker-group">
+                            <label>Duration (beats):</label>
+                            <input type="number" id="beats-picker" min="1" max="16" value="4">
+                        </div>
+                    </div>
+                    <div class="modal-actions">
+                        <button id="confirm-chord-btn" class="btn btn-primary">Add</button>
+                        <button id="cancel-chord-btn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Playback Controls -->
+            <section class="playback-section">
+                <h2>Playback</h2>
+                <div class="playback-controls">
+                    <button id="play-btn" class="btn btn-primary btn-large">▶ Play</button>
+                    <button id="stop-btn" class="btn btn-danger btn-large" disabled>■ Stop</button>
+                    <label class="loop-toggle">
+                        <input type="checkbox" id="loop-checkbox" checked>
+                        Loop
+                    </label>
+                </div>
+                <div id="playback-status" class="status-display">
+                    Ready to play
+                </div>
+            </section>
+
+            <!-- Quick Start Preset -->
+            <section class="preset-section">
+                <h2>Quick Start</h2>
+                <button id="load-preset-btn" class="btn btn-secondary">
+                    Load Sample Progression (I-V-vi-IV)
+                </button>
+            </section>
+        </main>
+
+        <footer>
+            <p>Backend: <span id="backend-status" class="status-indicator">●</span> <span id="backend-url">localhost:8000</span></p>
+        </footer>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
