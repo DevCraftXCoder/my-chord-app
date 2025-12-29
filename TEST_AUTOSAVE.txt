@@ -1,2 +1,0 @@
-This is a test file to verify auto-save is working.
-Created at: 2025-12-29
