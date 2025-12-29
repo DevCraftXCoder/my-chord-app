@@ -16,9 +16,17 @@ from synth_engine import SynthEngine
 app = FastAPI(title="Chord Progression API", version="1.0.0")
 
 # CORS middleware for frontend communication
+# SECURITY FIX: Restrict CORS to specific origins only
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost",
+        "http://localhost:80",
+        "http://localhost:8080",
+        "http://127.0.0.1",
+        "http://127.0.0.1:80",
+        "http://127.0.0.1:8080",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -28,6 +36,9 @@ app.add_middleware(
 chord_engine = ChordEngine()
 timing_engine = TimingEngine(bpm=120)
 synth_engine = SynthEngine()
+
+# SECURITY FIX: Thread lock for playback state to prevent race conditions
+playback_lock = threading.Lock()
 
 # Playback state
 playback_state = {
@@ -58,7 +69,8 @@ class ProgressionChord(BaseModel):
 
 
 class PlaybackRequest(BaseModel):
-    progression: List[ProgressionChord]
+    # SECURITY FIX: Limit progression size to prevent DoS attacks
+    progression: List[ProgressionChord] = Field(..., min_length=1, max_length=100)
     bpm: int = Field(default=120, ge=30, le=300)
     loop: bool = Field(default=True)
 
@@ -138,22 +150,24 @@ async def play_progression(request: PlaybackRequest):
     """Start playing chord progression"""
     global playback_state
 
-    if playback_state["is_playing"]:
-        raise HTTPException(status_code=409, detail="Playback already in progress")
+    # SECURITY FIX: Use lock to prevent race conditions
+    with playback_lock:
+        if playback_state["is_playing"]:
+            raise HTTPException(status_code=409, detail="Playback already in progress")
 
-    # Update BPM
-    timing_engine.bpm = request.bpm
+        # Update BPM
+        timing_engine.bpm = request.bpm
 
-    # Convert to ChordTiming objects
-    progression = [
-        ChordTiming(root=chord.root, chord_type=chord.chord_type, beats=chord.beats)
-        for chord in request.progression
-    ]
+        # Convert to ChordTiming objects
+        progression = [
+            ChordTiming(root=chord.root, chord_type=chord.chord_type, beats=chord.beats)
+            for chord in request.progression
+        ]
 
-    # Store progression
-    playback_state["current_progression"] = progression
-    playback_state["loop_enabled"] = request.loop
-    playback_state["is_playing"] = True
+        # Store progression
+        playback_state["current_progression"] = progression
+        playback_state["loop_enabled"] = request.loop
+        playback_state["is_playing"] = True
 
     # Start playback in background thread
     def playback_worker():
@@ -173,7 +187,8 @@ async def play_progression(request: PlaybackRequest):
                     break
 
         finally:
-            playback_state["is_playing"] = False
+            with playback_lock:
+                playback_state["is_playing"] = False
             synth_engine.stop_all_notes()
 
     thread = threading.Thread(target=playback_worker, daemon=True)
@@ -192,10 +207,13 @@ async def stop_playback():
     """Stop playback"""
     global playback_state
 
-    if not playback_state["is_playing"]:
-        raise HTTPException(status_code=409, detail="No playback in progress")
+    # SECURITY FIX: Use lock to prevent race conditions
+    with playback_lock:
+        if not playback_state["is_playing"]:
+            raise HTTPException(status_code=409, detail="No playback in progress")
 
-    playback_state["is_playing"] = False
+        playback_state["is_playing"] = False
+
     synth_engine.stop_all_notes()
 
     return {"status": "stopped"}

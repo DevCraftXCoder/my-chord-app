@@ -7,9 +7,9 @@ from typing import List, Optional
 try:
     import fluidsynth
     FLUIDSYNTH_AVAILABLE = True
-except ImportError:
+except (ImportError, FileNotFoundError, OSError):
     FLUIDSYNTH_AVAILABLE = False
-    print("Warning: FluidSynth not available. Install python-fluidsynth for audio playback.")
+    print("Warning: FluidSynth not available. Running in mock mode - chords will be logged to console.")
 
 
 class SynthEngine:
