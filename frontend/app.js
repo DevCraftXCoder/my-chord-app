@@ -41,8 +41,12 @@ async function init() {
 }
 
 function setupEventListeners() {
+    console.log('[App] Setting up event listeners...');
+    console.log('[App] addChordBtn:', addChordBtn);
+    console.log('[App] chordPickerModal:', chordPickerModal);
+
     bpmSlider.addEventListener('input', handleBpmChange);
-    addChordBtn.addEventListener('click', openChordPicker);
+    addChordBtn.addEventListener('click', () => openChordPicker());
     playBtn.addEventListener('click', handlePlay);
     stopBtn.addEventListener('click', handleStop);
     confirmChordBtn.addEventListener('click', handleConfirmChord);
@@ -78,6 +82,9 @@ async function updateBackendBpm() {
 
 // Chord Picker
 function openChordPicker(editIndex = null) {
+    console.log('[App] openChordPicker called, editIndex:', editIndex);
+    console.log('[App] chordPickerModal element:', chordPickerModal);
+
     currentEditIndex = editIndex;
 
     if (editIndex !== null) {
@@ -91,7 +98,9 @@ function openChordPicker(editIndex = null) {
         beatsPicker.value = 4;
     }
 
+    console.log('[App] Adding active class to modal...');
     chordPickerModal.classList.add('active');
+    console.log('[App] Modal classes:', chordPickerModal.classList.toString());
 }
 
 function closeChordPicker() {

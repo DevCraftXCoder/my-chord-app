@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Debug Modal</title>
+    <style>
+        body { background: #111; color: white; padding: 20px; }
+        button { padding: 10px 20px; font-size: 16px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); align-items: center; justify-content: center; }
+        .modal.active { display: flex; }
+        .modal-content { background: #333; padding: 20px; border-radius: 10px; }
+    </style>
+</head>
+<body>
+    <h1>Modal Test</h1>
+    <button id="test-btn">Click to Test Modal</button>
+
+    <div id="test-modal" class="modal">
+        <div class="modal-content">
+            <h2>Modal is working!</h2>
+            <button id="close-btn">Close</button>
+        </div>
+    </div>
+
+    <script>
+        const modal = document.getElementById('test-modal');
+        document.getElementById('test-btn').addEventListener('click', () => {
+            console.log('Button clicked!');
+            modal.classList.add('active');
+        });
+        document.getElementById('close-btn').addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+    </script>
+</body>
+</html>
