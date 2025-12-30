@@ -290,6 +290,8 @@ function loadPreset(type) {
 
 // Add a quick chord to the progression
 function addQuickChord(chordName) {
+    console.log('[ModernUI] addQuickChord called with:', chordName);
+
     // Parse chord name to root and type
     let root = chordName;
     let type = 'Major';
@@ -312,13 +314,20 @@ function addQuickChord(chordName) {
         beats: 4
     };
 
+    console.log('[ModernUI] Parsed chord:', chord);
+    console.log('[ModernUI] Current progression before push:', JSON.stringify(progression));
+
     // Access the global progression array from app.js
     if (typeof progression !== 'undefined' && typeof updateProgressionDisplay === 'function') {
         progression.push(chord);
+        console.log('[ModernUI] After push - Progression:', JSON.stringify(progression));
+        console.log('[ModernUI] Progression length:', progression.length);
         updateProgressionDisplay();
-        console.log('[ModernUI] Added quick chord:', chordName, 'Progression length:', progression.length);
+        console.log('[ModernUI] Display updated successfully');
     } else {
         console.error('[ModernUI] Could not add chord - progression or updateProgressionDisplay not found');
+        console.error('[ModernUI] progression exists?', typeof progression !== 'undefined');
+        console.error('[ModernUI] updateProgressionDisplay exists?', typeof updateProgressionDisplay === 'function');
     }
 }
 
