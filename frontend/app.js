@@ -38,6 +38,9 @@ async function init() {
     setupEventListeners();
     await checkBackendStatus();
     updateProgressionDisplay();
+
+    // Initialize new features after basic setup
+    initNewFeatures();
 }
 
 function setupEventListeners() {
@@ -195,6 +198,11 @@ async function handlePlay() {
     stopBtn.disabled = false;
     updateStatus(`Playing ${loop ? '(looping)' : ''}`, 'success');
 
+    // Start drums if enabled
+    if (drumsEnabled && drumsEnabled.checked && drumTrack) {
+        drumTrack.start(bpm);
+    }
+
     // Start local audio playback
     playProgression(bpm, loop);
 }
@@ -268,6 +276,11 @@ async function handleStop() {
     // Stop all audio
     if (audioSynth) {
         audioSynth.stopAll();
+    }
+
+    // Stop drums
+    if (drumTrack) {
+        drumTrack.stop();
     }
 
     // Clear visual highlighting
@@ -372,13 +385,6 @@ function initNewFeatures() {
     console.log('[App] New features initialized');
 }
 
-// Call after audio init
-const originalInit = init;
-async function init() {
-    await originalInit();
-    initNewFeatures();
-}
-
 // Drums
 function handleDrumsToggle() {
     if (drumsEnabled.checked && isPlaying) {
@@ -392,21 +398,6 @@ function handleDrumVolumeChange() {
     const volume = parseInt(drumVolume.value) / 100;
     drumTrack.setVolume(volume);
     drumVolumeValue.textContent = `${drumVolume.value}%`;
-}
-
-// Update playProgression to include drums
-const originalHandlePlay = handlePlay;
-async function handlePlay() {
-    await originalHandlePlay();
-    if (drumsEnabled.checked) {
-        drumTrack.start(parseInt(bpmSlider.value));
-    }
-}
-
-const originalHandleStop = handleStop;
-async function handleStop() {
-    await originalHandleStop();
-    drumTrack.stop();
 }
 
 // Key Helper
