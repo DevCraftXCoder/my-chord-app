@@ -376,6 +376,8 @@ const savedProgressionsContainer = document.getElementById('saved-progressions')
 const themeToggle = document.getElementById('theme-toggle');
 const instrumentSelector = document.getElementById('instrument-selector');
 const instrumentStatus = document.getElementById('instrument-status');
+const chordVolume = document.getElementById('chord-volume');
+const chordVolumeValue = document.getElementById('chord-volume-value');
 
 // Initialize new features
 function initNewFeatures() {
@@ -394,6 +396,7 @@ function initNewFeatures() {
     importFile.addEventListener('change', importProgression);
     themeToggle.addEventListener('click', toggleTheme);
     instrumentSelector.addEventListener('change', handleInstrumentChange);
+    chordVolume.addEventListener('input', handleChordVolumeChange);
 
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboardShortcuts);
@@ -439,6 +442,14 @@ function handleDrumVolumeChange() {
         drumTrack.setVolume(volume);
     }
     drumVolumeValue.textContent = `${drumVolume.value}%`;
+}
+
+function handleChordVolumeChange() {
+    const volume = parseInt(chordVolume.value) / 100;
+    if (audioSynth && audioSynth.masterGain) {
+        audioSynth.masterGain.gain.value = volume;
+    }
+    chordVolumeValue.textContent = `${chordVolume.value}%`;
 }
 
 // Key Helper

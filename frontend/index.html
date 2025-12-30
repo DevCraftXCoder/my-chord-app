@@ -14,13 +14,30 @@
         </header>
 
         <main>
-            <!-- BPM Control -->
+            <!-- BPM and Save/Load Controls -->
             <section class="bpm-section">
-                <h2>Tempo Control</h2>
-                <div class="bpm-control">
-                    <label for="bpm-slider">BPM: <span id="bpm-value">120</span></label>
-                    <input type="range" id="bpm-slider" min="30" max="300" value="120">
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <h2 style="margin-bottom: 0.5rem;">Tempo</h2>
+                        <div class="bpm-control">
+                            <label for="bpm-slider">BPM: <span id="bpm-value">120</span></label>
+                            <input type="range" id="bpm-slider" min="30" max="300" value="120">
+                        </div>
+                    </div>
+                    <div style="flex: 1; min-width: 300px;">
+                        <h2 style="margin-bottom: 0.5rem;">💾 Save & Load</h2>
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            <input type="text" id="progression-name" placeholder="Name..." style="flex: 1; min-width: 120px; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <button id="save-btn" class="btn btn-primary" style="padding: 0.5rem 1rem;">Save</button>
+                            <button id="export-btn" class="btn btn-secondary" style="padding: 0.5rem 0.8rem;">Export</button>
+                            <label class="btn btn-secondary import-btn" style="padding: 0.5rem 0.8rem; margin: 0;">
+                                Import
+                                <input type="file" id="import-file" accept=".json" style="display: none;">
+                            </label>
+                        </div>
+                    </div>
                 </div>
+                <div id="saved-progressions" class="saved-progressions" style="margin-top: 1rem;"></div>
             </section>
 
             <!-- Instrument Selector -->
@@ -56,6 +73,12 @@
                         </select>
                     </div>
                     <span id="instrument-status" class="instrument-status">Loading piano...</span>
+                </div>
+                <div class="instrument-controls" style="margin-top: 1rem;">
+                    <div class="picker-group">
+                        <label>Chord Volume: <span id="chord-volume-value">70%</span></label>
+                        <input type="range" id="chord-volume" min="0" max="100" value="70">
+                    </div>
                 </div>
             </section>
 
@@ -234,21 +257,6 @@
                     <button id="suggest-progression-btn" class="btn btn-secondary">Suggest Progression</button>
                 </div>
                 <div id="key-info" class="key-info"></div>
-            </section>
-
-            <!-- Save/Load Section -->
-            <section class="storage-section">
-                <h2>💾 Save & Load</h2>
-                <div class="storage-controls">
-                    <input type="text" id="progression-name" placeholder="Progression name..." class="progression-name-input">
-                    <button id="save-btn" class="btn btn-primary">Save</button>
-                    <button id="export-btn" class="btn btn-secondary">Export JSON</button>
-                    <label class="btn btn-secondary import-btn">
-                        Import JSON
-                        <input type="file" id="import-file" accept=".json" style="display: none;">
-                    </label>
-                </div>
-                <div id="saved-progressions" class="saved-progressions"></div>
             </section>
 
             <!-- Quick Start Preset -->
