@@ -81,7 +81,37 @@ class DrumTrack {
                 name: 'Yeat Style',
                 kick:  [1, 0, 0, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1, 1],
                 snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
-                hihat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+                hihat: [1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0, 1, 1, 1, 0]
+            },
+            'carti': {
+                name: 'Playboi Carti',
+                kick:  [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                hihat: [1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1, 0, 1, 1, 0]
+            },
+            'opium': {
+                name: 'Opium (Dark)',
+                kick:  [1, 0, 1, 0, 0, 0, 1, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
+                hihat: [1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0, 1, 1, 0, 0]
+            },
+            'wlr': {
+                name: 'WLR Rage',
+                kick:  [1, 0, 1, 1, 0, 0, 1, 0, 1, 0, 0, 1, 0, 1, 1, 0],
+                snare: [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+                hihat: [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+            },
+            'twizzy': {
+                name: 'Twizzy (Fast)',
+                kick:  [1, 0, 0, 1, 1, 0, 1, 0, 1, 0, 0, 1, 1, 0, 1, 1],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
+                hihat: [1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1]
+            },
+            'shoota': {
+                name: 'Shoota Style',
+                kick:  [1, 0, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1, 0, 0],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0],
+                hihat: [1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0, 1, 0]
             }
         };
 
@@ -185,8 +215,8 @@ class DrumTrack {
         noise.stop(time + 0.05);
     }
 
-    // Start playing pattern
-    start(bpm) {
+    // Start playing pattern with optional sync time
+    start(bpm, startTime = null) {
         if (!this.masterGain) this.initialize();
 
         this.stop(); // Stop any existing playback
@@ -195,13 +225,13 @@ class DrumTrack {
         this.bpm = bpm;
 
         const sixteenthNoteTime = (60 / bpm) / 4; // Time per 16th note in seconds
-        const lookahead = 0.1; // Schedule drums 100ms ahead
-        const scheduleInterval = 25; // Check every 25ms
+        const lookahead = 0.15; // Schedule drums 150ms ahead for better sync
+        const scheduleInterval = 20; // Check every 20ms for tighter timing
 
         console.log('[Drums] Started pattern:', this.currentPattern, 'at', bpm, 'BPM');
 
-        // Start time for synchronization
-        this.startTime = this.audioContext.currentTime;
+        // Start time for synchronization - use provided time or current time
+        this.startTime = startTime !== null ? startTime : this.audioContext.currentTime + 0.05;
         this.nextNoteTime = this.startTime;
 
         const scheduler = () => {
@@ -211,6 +241,7 @@ class DrumTrack {
             while (this.nextNoteTime < this.audioContext.currentTime + lookahead) {
                 const pattern = this.patterns[this.currentPattern];
 
+                // Schedule drum hits with precise timing
                 if (pattern.kick[this.currentBeat]) this.playKick(this.nextNoteTime);
                 if (pattern.snare[this.currentBeat]) this.playSnare(this.nextNoteTime);
                 if (pattern.hihat[this.currentBeat]) this.playHihat(this.nextNoteTime);
@@ -220,7 +251,7 @@ class DrumTrack {
             }
         };
 
-        // Run scheduler at regular intervals
+        // Run scheduler at regular intervals for precise timing
         this.intervalId = setInterval(scheduler, scheduleInterval);
         scheduler(); // Start immediately
     }
