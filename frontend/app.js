@@ -72,6 +72,12 @@ function setupEventListeners() {
     cancelChordBtn.addEventListener('click', closeChordPicker);
     loadPresetBtn.addEventListener('click', loadPreset);
 
+    // Random progression button
+    const loadRandomBtn = document.getElementById('load-random-btn');
+    if (loadRandomBtn) {
+        loadRandomBtn.addEventListener('click', loadRandomProgression);
+    }
+
     // Close modal on outside click
     chordPickerModal.addEventListener('click', (e) => {
         if (e.target === chordPickerModal) {
@@ -341,16 +347,132 @@ async function checkBackendStatus() {
     }
 }
 
+// Popular chord progressions templates
+const popularProgressions = [
+    {
+        name: 'Pop Progression (I-V-vi-IV)',
+        key: 'C',
+        chords: [
+            { root: 'C', chord_type: 'Major', beats: 4 },  // I
+            { root: 'G', chord_type: 'Major', beats: 4 },  // V
+            { root: 'A', chord_type: 'Minor', beats: 4 },  // vi
+            { root: 'F', chord_type: 'Major', beats: 4 }   // IV
+        ]
+    },
+    {
+        name: 'Sensitive (vi-IV-I-V)',
+        key: 'C',
+        chords: [
+            { root: 'A', chord_type: 'Minor', beats: 4 },  // vi
+            { root: 'F', chord_type: 'Major', beats: 4 },  // IV
+            { root: 'C', chord_type: 'Major', beats: 4 },  // I
+            { root: 'G', chord_type: 'Major', beats: 4 }   // V
+        ]
+    },
+    {
+        name: 'Jazz Turnaround (ii-V-I)',
+        key: 'C',
+        chords: [
+            { root: 'D', chord_type: 'Minor', beats: 4 },   // ii
+            { root: 'G', chord_type: '7', beats: 4 },       // V7
+            { root: 'C', chord_type: 'Maj7', beats: 8 }     // Imaj7
+        ]
+    },
+    {
+        name: '50s Progression (I-vi-IV-V)',
+        key: 'C',
+        chords: [
+            { root: 'C', chord_type: 'Major', beats: 4 },  // I
+            { root: 'A', chord_type: 'Minor', beats: 4 },  // vi
+            { root: 'F', chord_type: 'Major', beats: 4 },  // IV
+            { root: 'G', chord_type: 'Major', beats: 4 }   // V
+        ]
+    },
+    {
+        name: 'Andalusian (i-VII-VI-V)',
+        key: 'A',
+        chords: [
+            { root: 'A', chord_type: 'Minor', beats: 4 },  // i
+            { root: 'G', chord_type: 'Major', beats: 4 },  // VII
+            { root: 'F', chord_type: 'Major', beats: 4 },  // VI
+            { root: 'E', chord_type: 'Major', beats: 4 }   // V
+        ]
+    },
+    {
+        name: 'R&B Soul (I-iii-IV-V)',
+        key: 'C',
+        chords: [
+            { root: 'C', chord_type: 'Maj7', beats: 4 },   // Imaj7
+            { root: 'E', chord_type: 'Min7', beats: 4 },   // iii7
+            { root: 'F', chord_type: 'Maj7', beats: 4 },   // IVmaj7
+            { root: 'G', chord_type: '7', beats: 4 }       // V7
+        ]
+    },
+    {
+        name: 'Minor Pop (i-VI-III-VII)',
+        key: 'A',
+        chords: [
+            { root: 'A', chord_type: 'Minor', beats: 4 },  // i
+            { root: 'F', chord_type: 'Major', beats: 4 },  // VI
+            { root: 'C', chord_type: 'Major', beats: 4 },  // III
+            { root: 'G', chord_type: 'Major', beats: 4 }   // VII
+        ]
+    },
+    {
+        name: 'Circle of Fifths (I-IV-vii°-iii-vi-ii-V-I)',
+        key: 'C',
+        chords: [
+            { root: 'C', chord_type: 'Major', beats: 2 },  // I
+            { root: 'F', chord_type: 'Major', beats: 2 },  // IV
+            { root: 'B', chord_type: 'Dim', beats: 2 },    // vii°
+            { root: 'E', chord_type: 'Minor', beats: 2 },  // iii
+            { root: 'A', chord_type: 'Minor', beats: 2 },  // vi
+            { root: 'D', chord_type: 'Minor', beats: 2 },  // ii
+            { root: 'G', chord_type: 'Major', beats: 2 },  // V
+            { root: 'C', chord_type: 'Major', beats: 2 }   // I
+        ]
+    },
+    {
+        name: 'Trap/Hip-Hop (i-VI-III-VII)',
+        key: 'D',
+        chords: [
+            { root: 'D', chord_type: 'Minor', beats: 4 },  // i
+            { root: 'A#', chord_type: 'Major', beats: 4 }, // VI
+            { root: 'F', chord_type: 'Major', beats: 4 },  // III
+            { root: 'C', chord_type: 'Major', beats: 4 }   // VII
+        ]
+    },
+    {
+        name: 'Gospel (I-V-vi-iii-IV-I-IV-V)',
+        key: 'C',
+        chords: [
+            { root: 'C', chord_type: 'Major', beats: 2 },  // I
+            { root: 'G', chord_type: 'Major', beats: 2 },  // V
+            { root: 'A', chord_type: 'Minor', beats: 2 },  // vi
+            { root: 'E', chord_type: 'Minor', beats: 2 },  // iii
+            { root: 'F', chord_type: 'Major', beats: 2 },  // IV
+            { root: 'C', chord_type: 'Major', beats: 2 },  // I
+            { root: 'F', chord_type: 'Major', beats: 2 },  // IV
+            { root: 'G', chord_type: 'Major', beats: 2 }   // V
+        ]
+    }
+];
+
 // Load Preset Progression (I-V-vi-IV in C major)
 function loadPreset() {
-    progression = [
-        { root: 'C', chord_type: 'Major', beats: 4 },  // I
-        { root: 'G', chord_type: 'Major', beats: 4 },  // V
-        { root: 'A', chord_type: 'Minor', beats: 4 },  // vi
-        { root: 'F', chord_type: 'Major', beats: 4 }   // IV
-    ];
+    const preset = popularProgressions[0];
+    progression = [...preset.chords];
     updateProgressionDisplay();
-    updateStatus('Loaded I-V-vi-IV progression', 'success');
+    updateStatus(`Loaded ${preset.name}`, 'success');
+}
+
+// Load Random Good Progression
+function loadRandomProgression() {
+    const randomIndex = Math.floor(Math.random() * popularProgressions.length);
+    const preset = popularProgressions[randomIndex];
+    progression = [...preset.chords];
+    updateProgressionDisplay();
+    updateStatus(`Loaded ${preset.name} in ${preset.key}`, 'success');
 }
 
 // Export for use in HTML onclick attributes
