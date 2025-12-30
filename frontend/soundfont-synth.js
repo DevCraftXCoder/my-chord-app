@@ -193,19 +193,20 @@ class SoundFontSynth {
         const now = this.audioContext.currentTime;
         this.activeNotes.forEach(({ source, gainNode }) => {
             try {
-                // Immediately ramp down volume to prevent clicks
+                // Immediately ramp down volume to prevent clicks (faster: 5ms)
                 gainNode.gain.cancelScheduledValues(now);
                 gainNode.gain.setValueAtTime(gainNode.gain.value, now);
-                gainNode.gain.linearRampToValueAtTime(0, now + 0.01);
+                gainNode.gain.exponentialRampToValueAtTime(0.0001, now + 0.005);
 
-                // Stop the source immediately or very soon
-                source.stop(now + 0.01);
+                // Stop the source very soon
+                source.stop(now + 0.005);
             } catch (error) {
                 // Note already stopped or can't be stopped
                 console.warn('[SoundFont] Could not stop note:', error.message);
             }
         });
         this.activeNotes.clear();
+        console.log('[SoundFont] Stopped all notes');
     }
 
     // Set master volume

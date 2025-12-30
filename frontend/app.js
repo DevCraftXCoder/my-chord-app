@@ -518,7 +518,7 @@ function handlePause() {
     stopBtn.disabled = true;
     updateStatus('Paused', 'info');
 
-    // Stop all currently playing audio
+    // Stop all currently playing audio immediately
     if (audioSynth) {
         audioSynth.stopAll();
     }
@@ -527,6 +527,11 @@ function handlePause() {
     if (drumTrack) {
         drumTrack.stop();
     }
+
+    // Reset pause state to start from beginning on resume
+    // This prevents overlap issues from mid-progression resumes
+    pausedChordIndex = 0;
+    console.log('[App] Paused - will resume from beginning');
 }
 
 // Stop function (full stop, resets to beginning)
