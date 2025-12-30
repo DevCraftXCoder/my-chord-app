@@ -7,6 +7,9 @@ let progression = [];
 let currentEditIndex = null;
 let isPlaying = false;
 
+// Web Audio Synthesizer
+let audioSynth = null;
+
 // DOM Elements
 const bpmSlider = document.getElementById('bpm-slider');
 const bpmValue = document.getElementById('bpm-value');
@@ -29,6 +32,9 @@ const loadPresetBtn = document.getElementById('load-preset-btn');
 init();
 
 async function init() {
+    // Initialize Web Audio synthesizer
+    audioSynth = new AudioSynth();
+
     setupEventListeners();
     await checkBackendStatus();
     updateProgressionDisplay();
@@ -150,88 +156,101 @@ async function handlePlay() {
         return;
     }
 
+    // Initialize audio on first play (requires user interaction)
+    if (!audioSynth.isInitialized) {
+        const initialized = await audioSynth.initialize();
+        if (!initialized) {
+            updateStatus('Failed to initialize audio', 'error');
+            return;
+        }
+    }
+
     const bpm = parseInt(bpmSlider.value);
     const loop = loopCheckbox.checked;
 
-    try {
-        const response = await fetch(`${API_BASE_URL}/play`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                progression,
-                bpm,
-                loop
-            })
-        });
+    isPlaying = true;
+    playBtn.disabled = true;
+    stopBtn.disabled = false;
+    updateStatus(`Playing ${loop ? '(looping)' : ''}`, 'success');
 
-        if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.detail);
+    // Start local audio playback
+    playProgression(bpm, loop);
+}
+
+async function playProgression(bpm, loop) {
+    do {
+        for (let i = 0; i < progression.length; i++) {
+            if (!isPlaying) break;
+
+            const chord = progression[i];
+
+            // Get MIDI notes for this chord from backend
+            try {
+                const response = await fetch(`${API_BASE_URL}/generate-chord`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        root: chord.root,
+                        chord_type: chord.chord_type
+                    })
+                });
+
+                const data = await response.json();
+                const midiNotes = data.midi_notes;
+
+                // Calculate duration in seconds
+                const secondsPerBeat = 60 / bpm;
+                const duration = secondsPerBeat * chord.beats;
+
+                // Play the chord with Web Audio
+                audioSynth.playChord(midiNotes, duration);
+
+                // Highlight current chord
+                highlightChord(i);
+
+                // Wait for chord duration
+                await sleep(duration * 1000);
+
+            } catch (error) {
+                console.error('Error playing chord:', error);
+            }
         }
+    } while (isPlaying && loop);
 
-        isPlaying = true;
-        playBtn.disabled = true;
-        stopBtn.disabled = false;
-        updateStatus(`Playing ${loop ? '(looping)' : ''}`, 'success');
-        animatePlayback();
-
-    } catch (error) {
-        console.error('Playback error:', error);
-        updateStatus(`Error: ${error.message}`, 'error');
+    // Auto-stop if not looping
+    if (!loop) {
+        handleStop();
     }
+}
+
+function highlightChord(index) {
+    const chordSlots = document.querySelectorAll('.chord-slot');
+    chordSlots.forEach(slot => slot.classList.remove('active'));
+    if (chordSlots[index]) {
+        chordSlots[index].classList.add('active');
+    }
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function handleStop() {
-    try {
-        await fetch(`${API_BASE_URL}/stop`, {
-            method: 'POST'
-        });
+    isPlaying = false;
+    playBtn.disabled = false;
+    stopBtn.disabled = true;
+    updateStatus('Stopped', 'info');
 
-        isPlaying = false;
-        playBtn.disabled = false;
-        stopBtn.disabled = true;
-        updateStatus('Stopped', 'info');
-        clearPlaybackAnimation();
-
-    } catch (error) {
-        console.error('Stop error:', error);
-        updateStatus(`Error: ${error.message}`, 'error');
-    }
-}
-
-function animatePlayback() {
-    if (!isPlaying) return;
-
-    const chordSlots = document.querySelectorAll('.chord-slot');
-    let currentIndex = 0;
-
-    function highlightNext() {
-        if (!isPlaying) {
-            clearPlaybackAnimation();
-            return;
-        }
-
-        chordSlots.forEach(slot => slot.classList.remove('active'));
-
-        if (chordSlots[currentIndex]) {
-            chordSlots[currentIndex].classList.add('active');
-
-            const chord = progression[currentIndex];
-            const bpm = parseInt(bpmSlider.value);
-            const duration = (60 / bpm) * chord.beats * 1000;
-
-            currentIndex = (currentIndex + 1) % progression.length;
-            setTimeout(highlightNext, duration);
-        }
+    // Stop all audio
+    if (audioSynth) {
+        audioSynth.stopAll();
     }
 
-    highlightNext();
-}
-
-function clearPlaybackAnimation() {
+    // Clear visual highlighting
     const chordSlots = document.querySelectorAll('.chord-slot');
     chordSlots.forEach(slot => slot.classList.remove('active'));
 }
+
 
 // Status Updates
 function updateStatus(message, type = 'info') {
