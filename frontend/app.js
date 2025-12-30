@@ -266,16 +266,19 @@ async function handlePlay() {
         stopBtn.disabled = false;
         updateStatus('Resumed', 'success');
 
-        // Resume drums if enabled
-        if (drumsEnabled && drumsEnabled.checked && drumTrack) {
-            const bpm = parseInt(bpmSlider.value);
-            drumTrack.start(bpm);
-        }
-
-        // Resume playback from paused position
         const bpm = parseInt(bpmSlider.value);
         const loop = loopCheckbox.checked;
-        playProgressionFromPause(bpm, loop);
+
+        // Calculate synchronized start time for resume
+        const syncStartTime = audioSynth.audioContext.currentTime + 0.1;
+
+        // Resume drums if enabled with synchronized start time
+        if (drumsEnabled && drumsEnabled.checked && drumTrack) {
+            drumTrack.start(bpm, syncStartTime);
+        }
+
+        // Resume playback from paused position with synchronized timing
+        playProgressionFromPause(bpm, loop, syncStartTime);
         return;
     }
 
@@ -303,19 +306,22 @@ async function handlePlay() {
     stopBtn.disabled = false;
     updateStatus(`Playing ${loop ? '(looping)' : ''}`, 'success');
 
-    // Initialize and start drums if enabled
+    // Calculate synchronized start time for both chords and drums
+    const syncStartTime = audioSynth.audioContext.currentTime + 0.1;
+
+    // Initialize and start drums if enabled with synchronized start time
     if (drumsEnabled && drumsEnabled.checked) {
         initializeDrums();
         if (drumTrack) {
-            drumTrack.start(bpm);
+            drumTrack.start(bpm, syncStartTime);
         }
     }
 
-    // Start local audio playback
-    playProgression(bpm, loop);
+    // Start local audio playback with same start time
+    playProgression(bpm, loop, syncStartTime);
 }
 
-async function playProgression(bpm, loop) {
+async function playProgression(bpm, loop, startTime = null) {
     const secondsPerBeat = 60 / bpm;
 
     // Pre-fetch all chord notes ONCE to avoid timing delays
@@ -358,8 +364,8 @@ async function playProgression(bpm, loop) {
     // Calculate total loop duration
     const loopDuration = chordData.reduce((sum, c) => sum + c.duration, 0);
 
-    // Start scheduling from current time with small buffer
-    let scheduleTime = audioSynth.audioContext.currentTime + 0.1;
+    // Use provided start time or calculate new one (for perfect sync with drums)
+    let scheduleTime = startTime !== null ? startTime : audioSynth.audioContext.currentTime + 0.1;
 
     do {
         // Schedule chords one at a time with checks in between
@@ -421,10 +427,10 @@ async function playProgression(bpm, loop) {
 }
 
 // Resume playback from paused position
-async function playProgressionFromPause(bpm, loop) {
+async function playProgressionFromPause(bpm, loop, startTime = null) {
     if (!pausedChordData) {
         // No saved state, start from beginning
-        playProgression(bpm, loop);
+        playProgression(bpm, loop, startTime);
         return;
     }
 
@@ -432,8 +438,8 @@ async function playProgressionFromPause(bpm, loop) {
     const chordData = pausedChordData;
     const loopDuration = chordData.reduce((sum, c) => sum + c.duration, 0);
 
-    // Start scheduling from current time with small buffer
-    let scheduleTime = audioSynth.audioContext.currentTime + 0.1;
+    // Use provided start time or calculate new one (for perfect sync with drums)
+    let scheduleTime = startTime !== null ? startTime : audioSynth.audioContext.currentTime + 0.1;
 
     do {
         // Schedule from paused position with checks in between
