@@ -57,15 +57,53 @@
                         <div class="picker-group">
                             <label>Chord Type:</label>
                             <select id="type-picker">
-                                <option value="Major">Major</option>
-                                <option value="Minor">Minor</option>
-                                <option value="7">7</option>
-                                <option value="Maj7">Maj7</option>
-                                <option value="Min7">Min7</option>
-                                <option value="Dim">Dim</option>
-                                <option value="Aug">Aug</option>
-                                <option value="Sus2">Sus2</option>
-                                <option value="Sus4">Sus4</option>
+                                <optgroup label="Basic Triads">
+                                    <option value="Major">Major</option>
+                                    <option value="Minor">Minor</option>
+                                    <option value="Dim">Diminished</option>
+                                    <option value="Aug">Augmented</option>
+                                    <option value="5">Power Chord (5)</option>
+                                </optgroup>
+                                <optgroup label="Suspended">
+                                    <option value="Sus2">Sus2</option>
+                                    <option value="Sus4">Sus4</option>
+                                </optgroup>
+                                <optgroup label="Seventh Chords">
+                                    <option value="7">Dominant 7</option>
+                                    <option value="Maj7">Major 7</option>
+                                    <option value="Min7">Minor 7</option>
+                                    <option value="Dim7">Diminished 7</option>
+                                    <option value="Min7b5">Half-Diminished (m7♭5)</option>
+                                    <option value="Aug7">Augmented 7</option>
+                                    <option value="MinMaj7">Minor-Major 7</option>
+                                </optgroup>
+                                <optgroup label="Ninth Chords">
+                                    <option value="9">Dominant 9</option>
+                                    <option value="Maj9">Major 9</option>
+                                    <option value="Min9">Minor 9</option>
+                                    <option value="Add9">Add9</option>
+                                </optgroup>
+                                <optgroup label="Eleventh Chords">
+                                    <option value="11">Dominant 11</option>
+                                    <option value="Maj11">Major 11</option>
+                                    <option value="Min11">Minor 11</option>
+                                </optgroup>
+                                <optgroup label="Thirteenth Chords">
+                                    <option value="13">Dominant 13</option>
+                                    <option value="Maj13">Major 13</option>
+                                    <option value="Min13">Minor 13</option>
+                                </optgroup>
+                                <optgroup label="Sixth Chords">
+                                    <option value="6">Major 6</option>
+                                    <option value="Min6">Minor 6</option>
+                                    <option value="6/9">6/9</option>
+                                </optgroup>
+                                <optgroup label="Altered Chords">
+                                    <option value="7b5">7♭5</option>
+                                    <option value="7#5">7♯5</option>
+                                    <option value="7b9">7♭9</option>
+                                    <option value="7#9">7♯9 (Hendrix)</option>
+                                </optgroup>
                             </select>
                         </div>
                         <div class="picker-group">

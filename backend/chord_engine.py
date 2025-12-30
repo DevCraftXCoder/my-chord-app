@@ -5,15 +5,54 @@ Chord Engine - Generates musical chords using music theory formulas
 class ChordEngine:
     # Chord formulas: semitone intervals from root note
     CHORD_TYPES = {
+        # Basic Triads
         'Major': [0, 4, 7],
         'Minor': [0, 3, 7],
-        '7': [0, 4, 7, 10],
-        'Maj7': [0, 4, 7, 11],
-        'Min7': [0, 3, 7, 10],
         'Dim': [0, 3, 6],
         'Aug': [0, 4, 8],
+
+        # Suspended Chords
         'Sus2': [0, 2, 7],
         'Sus4': [0, 5, 7],
+
+        # Seventh Chords
+        '7': [0, 4, 7, 10],           # Dominant 7th
+        'Maj7': [0, 4, 7, 11],        # Major 7th
+        'Min7': [0, 3, 7, 10],        # Minor 7th
+        'Dim7': [0, 3, 6, 9],         # Diminished 7th
+        'Min7b5': [0, 3, 6, 10],      # Half-diminished 7th
+        'Aug7': [0, 4, 8, 10],        # Augmented 7th
+        'MinMaj7': [0, 3, 7, 11],     # Minor-Major 7th
+
+        # Extended Chords (9th)
+        '9': [0, 4, 7, 10, 14],       # Dominant 9th
+        'Maj9': [0, 4, 7, 11, 14],    # Major 9th
+        'Min9': [0, 3, 7, 10, 14],    # Minor 9th
+        'Add9': [0, 4, 7, 14],        # Add9 (no 7th)
+
+        # Extended Chords (11th)
+        '11': [0, 4, 7, 10, 14, 17],  # Dominant 11th
+        'Maj11': [0, 4, 7, 11, 14, 17], # Major 11th
+        'Min11': [0, 3, 7, 10, 14, 17], # Minor 11th
+
+        # Extended Chords (13th)
+        '13': [0, 4, 7, 10, 14, 21],  # Dominant 13th
+        'Maj13': [0, 4, 7, 11, 14, 21], # Major 13th
+        'Min13': [0, 3, 7, 10, 14, 21], # Minor 13th
+
+        # Sixth Chords
+        '6': [0, 4, 7, 9],            # Major 6th
+        'Min6': [0, 3, 7, 9],         # Minor 6th
+        '6/9': [0, 4, 7, 9, 14],      # 6/9 chord
+
+        # Altered Chords
+        '7b5': [0, 4, 6, 10],         # Dominant 7 flat 5
+        '7#5': [0, 4, 8, 10],         # Dominant 7 sharp 5
+        '7b9': [0, 4, 7, 10, 13],     # Dominant 7 flat 9
+        '7#9': [0, 4, 7, 10, 15],     # Dominant 7 sharp 9 (Hendrix chord)
+
+        # Power Chord
+        '5': [0, 7],                  # Power chord (root + fifth)
     }
 
     # Note names to MIDI note numbers (C4 = middle C = 60)

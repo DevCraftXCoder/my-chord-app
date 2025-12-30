@@ -128,8 +128,15 @@ function updateProgressionDisplay() {
     progression.forEach((chord, index) => {
         const chordSlot = document.createElement('div');
         chordSlot.className = 'chord-slot';
+
+        // Format chord name display
+        let chordDisplay = chord.root;
+        if (chord.chord_type !== 'Major') {
+            chordDisplay += chord.chord_type;
+        }
+
         chordSlot.innerHTML = `
-            <div class="chord-name">${chord.root}${chord.chord_type === 'Major' ? '' : chord.chord_type}</div>
+            <div class="chord-name">${chordDisplay}</div>
             <div class="chord-duration">${chord.beats} beat${chord.beats > 1 ? 's' : ''}</div>
             <button class="chord-remove" onclick="removeChord(${index})">×</button>
         `;
