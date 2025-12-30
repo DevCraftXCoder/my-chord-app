@@ -329,6 +329,178 @@ footer {
     color: var(--danger-color);
 }
 
+/* Light Mode */
+body.light-mode {
+    --background: #f8f9fa;
+    --surface: #ffffff;
+    --surface-light: #e9ecef;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --border: #dee2e6;
+}
+
+/* Drums Section */
+.drums-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: center;
+}
+
+.drum-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.drum-toggle input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+}
+
+/* Key Helper */
+.key-helper-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.key-info {
+    padding: 1rem;
+    background: var(--surface-light);
+    border-radius: 6px;
+    min-height: 50px;
+}
+
+.key-chord-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.key-chord {
+    padding: 0.75rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 6px;
+    text-align: center;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.key-chord:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+}
+
+.progression-suggestion {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: var(--surface-light);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.progression-suggestion:hover {
+    background: var(--border);
+}
+
+/* Storage Section */
+.storage-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.progression-name-input {
+    flex: 1;
+    min-width: 200px;
+    padding: 0.75rem;
+    background: var(--surface-light);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-primary);
+    font-size: 1rem;
+}
+
+.saved-progressions {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-top: 1rem;
+}
+
+.saved-progression-item {
+    padding: 1rem;
+    background: var(--surface-light);
+    border-radius: 6px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.saved-progression-info {
+    flex: 1;
+}
+
+.saved-progression-name {
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.saved-progression-meta {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.saved-progression-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.saved-progression-actions button {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+/* Footer Controls */
+.footer-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background: var(--surface);
+    border-radius: 6px;
+}
+
+.footer-controls span {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Draggable Chords */
+.chord-slot.dragging {
+    opacity: 0.5;
+}
+
+.chord-slot.drag-over {
+    border-color: var(--primary-color);
+    background: var(--surface);
+}
+
+/* Import button */
+.import-btn {
+    cursor: pointer;
+}
+
 /* Responsive */
 @media (max-width: 600px) {
     .container {
@@ -345,5 +517,14 @@ footer {
 
     .btn-large {
         width: 100%;
+    }
+
+    .footer-controls {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .footer-controls span {
+        text-align: center;
     }
 }

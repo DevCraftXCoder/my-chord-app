@@ -134,6 +134,80 @@
                 </div>
             </section>
 
+            <!-- Drums Section -->
+            <section class="drums-section">
+                <h2>🥁 Drum Track</h2>
+                <div class="drums-controls">
+                    <label class="drum-toggle">
+                        <input type="checkbox" id="drums-enabled">
+                        Enable Drums
+                    </label>
+                    <div class="picker-group">
+                        <label>Pattern:</label>
+                        <select id="drum-pattern">
+                            <option value="basic">Basic Rock</option>
+                            <option value="pop">Pop Beat</option>
+                            <option value="jazz">Jazz Swing</option>
+                            <option value="funk">Funk Groove</option>
+                            <option value="ballad">Ballad</option>
+                        </select>
+                    </div>
+                    <div class="picker-group">
+                        <label>Volume: <span id="drum-volume-value">30%</span></label>
+                        <input type="range" id="drum-volume" min="0" max="100" value="30">
+                    </div>
+                </div>
+            </section>
+
+            <!-- Key Helper Section -->
+            <section class="key-helper-section">
+                <h2>🎹 Key Helper</h2>
+                <div class="key-helper-controls">
+                    <div class="picker-group">
+                        <label>Key:</label>
+                        <select id="key-root">
+                            <option value="C">C</option>
+                            <option value="C#">C#</option>
+                            <option value="D">D</option>
+                            <option value="D#">D#</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                            <option value="F#">F#</option>
+                            <option value="G">G</option>
+                            <option value="G#">G#</option>
+                            <option value="A">A</option>
+                            <option value="A#">A#</option>
+                            <option value="B">B</option>
+                        </select>
+                    </div>
+                    <div class="picker-group">
+                        <label>Mode:</label>
+                        <select id="key-mode">
+                            <option value="major">Major</option>
+                            <option value="minor">Minor</option>
+                        </select>
+                    </div>
+                    <button id="show-key-chords-btn" class="btn btn-secondary">Show Chords in Key</button>
+                    <button id="suggest-progression-btn" class="btn btn-secondary">Suggest Progression</button>
+                </div>
+                <div id="key-info" class="key-info"></div>
+            </section>
+
+            <!-- Save/Load Section -->
+            <section class="storage-section">
+                <h2>💾 Save & Load</h2>
+                <div class="storage-controls">
+                    <input type="text" id="progression-name" placeholder="Progression name..." class="progression-name-input">
+                    <button id="save-btn" class="btn btn-primary">Save</button>
+                    <button id="export-btn" class="btn btn-secondary">Export JSON</button>
+                    <label class="btn btn-secondary import-btn">
+                        Import JSON
+                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                    </label>
+                </div>
+                <div id="saved-progressions" class="saved-progressions"></div>
+            </section>
+
             <!-- Quick Start Preset -->
             <section class="preset-section">
                 <h2>Quick Start</h2>
@@ -144,10 +218,26 @@
         </main>
 
         <footer>
+            <div class="footer-controls">
+                <button id="theme-toggle" class="btn btn-secondary">🌙 Dark Mode</button>
+                <span>Keyboard: Space = Play/Stop | Ctrl+S = Save | Ctrl+N = New Chord</span>
+            </div>
             <p>Backend: <span id="backend-status" class="status-indicator">●</span> <span id="backend-url">localhost:8000</span></p>
         </footer>
     </div>
 
+    <!-- Save Modal -->
+    <div id="save-modal" class="modal">
+        <div class="modal-content">
+            <h3>Saved Progressions</h3>
+            <div id="save-modal-list" class="save-modal-list"></div>
+            <button id="close-save-modal" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+
+    <script src="storage.js"></script>
+    <script src="drums.js"></script>
+    <script src="key-helper.js"></script>
     <script src="audio-synth.js"></script>
     <script src="app.js"></script>
 </body>

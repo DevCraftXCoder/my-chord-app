@@ -315,3 +315,335 @@ function loadPreset() {
 
 // Export for use in HTML onclick attributes
 window.removeChord = removeChord;
+
+// ========================================
+// NEW FEATURES: Drums, Key Helper, Storage, UI
+// ========================================
+
+// Initialize new modules
+let drumTrack = null;
+let keyHelper = null;
+let storageManager = null;
+
+// New DOM Elements
+const drumsEnabled = document.getElementById('drums-enabled');
+const drumPattern = document.getElementById('drum-pattern');
+const drumVolume = document.getElementById('drum-volume');
+const drumVolumeValue = document.getElementById('drum-volume-value');
+const keyRoot = document.getElementById('key-root');
+const keyMode = document.getElementById('key-mode');
+const showKeyChordsBtn = document.getElementById('show-key-chords-btn');
+const suggestProgressionBtn = document.getElementById('suggest-progression-btn');
+const keyInfo = document.getElementById('key-info');
+const progressionNameInput = document.getElementById('progression-name');
+const saveBtn = document.getElementById('save-btn');
+const exportBtn = document.getElementById('export-btn');
+const importFile = document.getElementById('import-file');
+const savedProgressionsContainer = document.getElementById('saved-progressions');
+const themeToggle = document.getElementById('theme-toggle');
+
+// Initialize new features
+function initNewFeatures() {
+    // Initialize modules
+    drumTrack = new DrumTrack(audioSynth.audioContext);
+    keyHelper = new KeyHelper();
+    storageManager = new StorageManager();
+
+    // Setup event listeners for new features
+    drumsEnabled.addEventListener('change', handleDrumsToggle);
+    drumPattern.addEventListener('change', (e) => drumTrack.setPattern(e.target.value));
+    drumVolume.addEventListener('input', handleDrumVolumeChange);
+    showKeyChordsBtn.addEventListener('click', showChordsInKey);
+    suggestProgressionBtn.addEventListener('click', suggestProgression);
+    saveBtn.addEventListener('click', saveProgression);
+    exportBtn.addEventListener('click', exportProgression);
+    importFile.addEventListener('change', importProgression);
+    themeToggle.addEventListener('click', toggleTheme);
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', handleKeyboardShortcuts);
+
+    // Load saved progressions
+    displaySavedProgressions();
+
+    // Load theme preference
+    loadTheme();
+
+    console.log('[App] New features initialized');
+}
+
+// Call after audio init
+const originalInit = init;
+async function init() {
+    await originalInit();
+    initNewFeatures();
+}
+
+// Drums
+function handleDrumsToggle() {
+    if (drumsEnabled.checked && isPlaying) {
+        drumTrack.start(parseInt(bpmSlider.value));
+    } else {
+        drumTrack.stop();
+    }
+}
+
+function handleDrumVolumeChange() {
+    const volume = parseInt(drumVolume.value) / 100;
+    drumTrack.setVolume(volume);
+    drumVolumeValue.textContent = `${drumVolume.value}%`;
+}
+
+// Update playProgression to include drums
+const originalHandlePlay = handlePlay;
+async function handlePlay() {
+    await originalHandlePlay();
+    if (drumsEnabled.checked) {
+        drumTrack.start(parseInt(bpmSlider.value));
+    }
+}
+
+const originalHandleStop = handleStop;
+async function handleStop() {
+    await originalHandleStop();
+    drumTrack.stop();
+}
+
+// Key Helper
+function showChordsInKey() {
+    const root = keyRoot.value;
+    const mode = keyMode.value;
+    const chords = mode === 'major'
+        ? keyHelper.getChordsInMajorKey(root)
+        : keyHelper.getChordsInMinorKey(root);
+
+    let html = `<h4>Chords in ${root} ${mode}:</h4><div class="key-chord-grid">`;
+    chords.forEach(chord => {
+        html += `<div class="key-chord" onclick="addChordFromKey('${chord.root}', '${chord.type}')">${chord.degree}: ${chord.root}${chord.type === 'Major' ? '' : chord.type}</div>`;
+    });
+    html += '</div>';
+    keyInfo.innerHTML = html;
+}
+
+function suggestProgression() {
+    const root = keyRoot.value;
+    const mode = keyMode.value;
+    const suggestions = keyHelper.getSuggestedProgressions(root, mode);
+
+    let html = `<h4>Suggested Progressions in ${root} ${mode}:</h4>`;
+    suggestions.forEach(sugg => {
+        html += `<div class="progression-suggestion" onclick='loadSuggestedProgression(${JSON.stringify(sugg.progression)})'>
+            <strong>${sugg.name}</strong><br>
+            ${sugg.progression.map(c => c.root + (c.chord_type === 'Major' ? '' : c.chord_type)).join(' - ')}
+        </div>`;
+    });
+    keyInfo.innerHTML = html;
+}
+
+window.addChordFromKey = function(root, type) {
+    progression.push({ root: root, chord_type: type, beats: 4 });
+    updateProgressionDisplay();
+    updateStatus(`Added ${root}${type === 'Major' ? '' : type}`, 'success');
+};
+
+window.loadSuggestedProgression = function(prog) {
+    progression = prog;
+    updateProgressionDisplay();
+    updateStatus('Loaded suggested progression', 'success');
+};
+
+// Storage
+function saveProgression() {
+    const name = progressionNameInput.value.trim() || `Progression ${Date.now()}`;
+    if (progression.length === 0) {
+        updateStatus('Add some chords first!', 'error');
+        return;
+    }
+
+    storageManager.save(name, progression, parseInt(bpmSlider.value));
+    progressionNameInput.value = '';
+    displaySavedProgressions();
+    updateStatus(`Saved "${name}"`, 'success');
+}
+
+function exportProgression() {
+    const name = progressionNameInput.value.trim() || `Progression_${Date.now()}`;
+    if (progression.length === 0) {
+        updateStatus('Add some chords first!', 'error');
+        return;
+    }
+
+    const data = {
+        name: name,
+        progression: progression,
+        bpm: parseInt(bpmSlider.value)
+    };
+    storageManager.exportToFile(data, name);
+    updateStatus(`Exported "${name}"`, 'success');
+}
+
+function importProgression(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    storageManager.importFromFile(file, (data) => {
+        progression = data.progression;
+        bpmSlider.value = data.bpm || 120;
+        bpmValue.textContent = bpmSlider.value;
+        progressionNameInput.value = data.name;
+        updateProgressionDisplay();
+        updateStatus(`Imported "${data.name}"`, 'success');
+    });
+}
+
+function displaySavedProgressions() {
+    const saved = storageManager.getAll();
+    if (saved.length === 0) {
+        savedProgressionsContainer.innerHTML = '<p style="color: var(--text-secondary); padding: 1rem;">No saved progressions yet</p>';
+        return;
+    }
+
+    let html = '';
+    saved.forEach(item => {
+        html += `<div class="saved-progression-item">
+            <div class="saved-progression-info">
+                <div class="saved-progression-name">${item.name}</div>
+                <div class="saved-progression-meta">${item.progression.length} chords • ${item.bpm} BPM</div>
+            </div>
+            <div class="saved-progression-actions">
+                <button class="btn btn-primary" onclick="loadSavedProgression(${item.id})">Load</button>
+                <button class="btn btn-secondary" onclick="exportSavedProgression(${item.id})">Export</button>
+                <button class="btn btn-danger" onclick="deleteSavedProgression(${item.id})">Delete</button>
+            </div>
+        </div>`;
+    });
+    savedProgressionsContainer.innerHTML = html;
+}
+
+window.loadSavedProgression = function(id) {
+    const item = storageManager.load(id);
+    if (item) {
+        progression = item.progression;
+        bpmSlider.value = item.bpm;
+        bpmValue.textContent = item.bpm;
+        progressionNameInput.value = item.name;
+        updateProgressionDisplay();
+        updateStatus(`Loaded "${item.name}"`, 'success');
+    }
+};
+
+window.exportSavedProgression = function(id) {
+    const item = storageManager.load(id);
+    if (item) {
+        storageManager.exportToFile(item, item.name);
+        updateStatus(`Exported "${item.name}"`, 'success');
+    }
+};
+
+window.deleteSavedProgression = function(id) {
+    if (confirm('Delete this progression?')) {
+        storageManager.delete(id);
+        displaySavedProgressions();
+        updateStatus('Deleted', 'info');
+    }
+};
+
+// Theme Toggle
+function toggleTheme() {
+    document.body.classList.toggle('light-mode');
+    const isLight = document.body.classList.contains('light-mode');
+    themeToggle.textContent = isLight ? '🌙 Dark Mode' : '☀️ Light Mode';
+    localStorage.setItem('theme', isLight ? 'light' : 'dark');
+}
+
+function loadTheme() {
+    const theme = localStorage.getItem('theme');
+    if (theme === 'light') {
+        document.body.classList.add('light-mode');
+        themeToggle.textContent = '🌙 Dark Mode';
+    }
+}
+
+// Keyboard Shortcuts
+function handleKeyboardShortcuts(e) {
+    // Space = Play/Stop
+    if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'SELECT') {
+        e.preventDefault();
+        if (isPlaying) {
+            handleStop();
+        } else {
+            handlePlay();
+        }
+    }
+
+    // Ctrl+S = Save
+    if (e.ctrlKey && e.code === 'KeyS') {
+        e.preventDefault();
+        saveProgression();
+    }
+
+    // Ctrl+N = New Chord
+    if (e.ctrlKey && e.code === 'KeyN') {
+        e.preventDefault();
+        openChordPicker();
+    }
+
+    // Escape = Close Modal
+    if (e.code === 'Escape') {
+        closeChordPicker();
+    }
+}
+
+// Drag and Drop for chord reordering
+function makeChordsDraggable() {
+    const chordSlots = document.querySelectorAll('.chord-slot');
+    chordSlots.forEach((slot, index) => {
+        slot.draggable = true;
+        slot.dataset.index = index;
+
+        slot.addEventListener('dragstart', handleDragStart);
+        slot.addEventListener('dragover', handleDragOver);
+        slot.addEventListener('drop', handleDrop);
+        slot.addEventListener('dragend', handleDragEnd);
+    });
+}
+
+let draggedIndex = null;
+
+function handleDragStart() {
+    draggedIndex = parseInt(this.dataset.index);
+    this.classList.add('dragging');
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    this.classList.add('drag-over');
+}
+
+function handleDrop(e) {
+    e.preventDefault();
+    const dropIndex = parseInt(this.dataset.index);
+
+    if (draggedIndex !== null && draggedIndex !== dropIndex) {
+        const draggedChord = progression[draggedIndex];
+        progression.splice(draggedIndex, 1);
+        progression.splice(dropIndex, 0, draggedChord);
+        updateProgressionDisplay();
+    }
+
+    this.classList.remove('drag-over');
+}
+
+function handleDragEnd() {
+    document.querySelectorAll('.chord-slot').forEach(slot => {
+        slot.classList.remove('dragging', 'drag-over');
+    });
+    draggedIndex = null;
+}
+
+// Update the original updateProgressionDisplay to add drag-drop
+const originalUpdateProgressionDisplay = updateProgressionDisplay;
+function updateProgressionDisplay() {
+    originalUpdateProgressionDisplay();
+    makeChordsDraggable();
+}
