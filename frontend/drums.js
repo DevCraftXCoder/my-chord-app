@@ -149,22 +149,37 @@ class DrumTrack {
         this.stop(); // Stop any existing playback
         this.isPlaying = true;
         this.currentBeat = 0;
+        this.bpm = bpm;
 
         const sixteenthNoteTime = (60 / bpm) / 4; // Time per 16th note in seconds
-        const intervalMs = sixteenthNoteTime * 1000;
+        const lookahead = 0.1; // Schedule drums 100ms ahead
+        const scheduleInterval = 25; // Check every 25ms
 
         console.log('[Drums] Started pattern:', this.currentPattern, 'at', bpm, 'BPM');
 
-        this.intervalId = setInterval(() => {
-            const pattern = this.patterns[this.currentPattern];
-            const time = this.audioContext.currentTime;
+        // Start time for synchronization
+        this.startTime = this.audioContext.currentTime;
+        this.nextNoteTime = this.startTime;
 
-            if (pattern.kick[this.currentBeat]) this.playKick(time);
-            if (pattern.snare[this.currentBeat]) this.playSnare(time);
-            if (pattern.hihat[this.currentBeat]) this.playHihat(time);
+        const scheduler = () => {
+            if (!this.isPlaying) return;
 
-            this.currentBeat = (this.currentBeat + 1) % 16;
-        }, intervalMs);
+            // Schedule all notes that need to play in the next lookahead window
+            while (this.nextNoteTime < this.audioContext.currentTime + lookahead) {
+                const pattern = this.patterns[this.currentPattern];
+
+                if (pattern.kick[this.currentBeat]) this.playKick(this.nextNoteTime);
+                if (pattern.snare[this.currentBeat]) this.playSnare(this.nextNoteTime);
+                if (pattern.hihat[this.currentBeat]) this.playHihat(this.nextNoteTime);
+
+                this.nextNoteTime += sixteenthNoteTime;
+                this.currentBeat = (this.currentBeat + 1) % 16;
+            }
+        };
+
+        // Run scheduler at regular intervals
+        this.intervalId = setInterval(scheduler, scheduleInterval);
+        scheduler(); // Start immediately
     }
 
     // Stop playing

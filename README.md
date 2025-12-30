@@ -1,29 +1,35 @@
-# Chord Progression Player
+# MyChord
 
-A web-based musical chord progression player that works like a programmable backing band for musicians.
+**by DevXCoder**
+
+A modern web-based chord progression player with drums, key helper, and save/load features.
 
 ## Features
 
-- **Chord Picker**: Choose from 9 chord types with all 12 root notes
-- **Progression Builder**: Build custom chord progressions with configurable beat durations
+- **36+ Chord Types**: Major, Minor, 7th, 9th, 11th, 13th, Suspended, Altered, and more
+- **Progression Builder**: Drag-and-drop chord reordering with visual feedback
 - **BPM Control**: Set tempo from 30-300 BPM
-- **Real-time Playback**: Synthesized audio playback using FluidSynth
+- **Web Audio Synthesis**: Browser-based audio with no plugins required
+- **Drum Tracks**: 5 drum patterns (Rock, Pop, Jazz, Funk, Ballad) with volume control
+- **Key Helper**: Shows chords in any key and suggests common progressions
+- **Save/Load**: localStorage persistence with JSON export/import
+- **Dark/Light Theme**: Toggle between dark and light modes
+- **Keyboard Shortcuts**: Space (Play/Stop), Ctrl+S (Save), Ctrl+N (New Chord)
 - **Looping**: Optional loop mode for continuous practice
-- **Quick Presets**: Load common progressions like I-V-vi-IV
 
 ## Architecture
 
 ```
 [ Frontend (HTML/CSS/JS) ]
           ↓
-[ FastAPI Backend ]
-          ↓
-[ Chord Engine ] → [ BPM Scheduler ]
-          ↓
-[ FluidSynth Synthesizer ]
-          ↓
-[ Audio Output ]
+[ Web Audio API ] ← [ FastAPI Backend ]
+          ↓              ↓
+[ Audio Synthesis ] [ Chord Engine ]
 ```
+
+- **Frontend**: Vanilla JavaScript with Web Audio API for synthesis
+- **Backend**: FastAPI for chord generation and music theory
+- **Audio**: Browser-native Web Audio API (no plugins required)
 
 ## Chord System
 
