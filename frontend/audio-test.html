@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        button {
+            padding: 15px 30px;
+            margin: 10px;
+            font-size: 18px;
+            cursor: pointer;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        #status {
+            margin: 20px 0;
+            padding: 15px;
+            background: #333;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔊 Audio Test Page</h1>
+    <p>Click buttons to test if audio is working:</p>
+
+    <button id="test-simple">Test Simple Beep</button>
+    <button id="test-note">Test Single Note (C)</button>
+    <button id="test-chord">Test C Major Chord</button>
+    <button id="test-progression">Test C-G-Am-F (fast)</button>
+
+    <div id="status">Status: Click a button to test audio</div>
+
+    <script src="audio-synth.js"></script>
+    <script>
+        const statusDiv = document.getElementById('status');
+        const synth = new AudioSynth();
+
+        function updateStatus(msg) {
+            statusDiv.textContent = 'Status: ' + msg;
+            console.log('[Test]', msg);
+        }
+
+        // Test 1: Simple beep using basic Web Audio
+        document.getElementById('test-simple').addEventListener('click', async () => {
+            updateStatus('Testing simple beep...');
+
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.frequency.value = 440; // A4
+            gainNode.gain.value = 0.3;
+
+            oscillator.start();
+
+            setTimeout(() => {
+                oscillator.stop();
+                updateStatus('Simple beep finished. Did you hear it?');
+            }, 500);
+        });
+
+        // Test 2: Single note with AudioSynth
+        document.getElementById('test-note').addEventListener('click', async () => {
+            updateStatus('Initializing audio...');
+
+            const initialized = await synth.initialize();
+            if (!initialized) {
+                updateStatus('❌ Failed to initialize audio!');
+                return;
+            }
+
+            updateStatus('Playing single note (C4 - MIDI 60)...');
+            synth.playNote(60, 100, 1.0); // C4 for 1 second
+
+            setTimeout(() => {
+                updateStatus('Single note finished. Did you hear a piano note?');
+            }, 1100);
+        });
+
+        // Test 3: Chord
+        document.getElementById('test-chord').addEventListener('click', async () => {
+            updateStatus('Initializing audio...');
+
+            const initialized = await synth.initialize();
+            if (!initialized) {
+                updateStatus('❌ Failed to initialize audio!');
+                return;
+            }
+
+            updateStatus('Playing C Major chord (C-E-G)...');
+            synth.playChord([60, 64, 67], 2.0); // C Major for 2 seconds
+
+            setTimeout(() => {
+                updateStatus('Chord finished. Did you hear three notes together?');
+            }, 2100);
+        });
+
+        // Test 4: Quick progression
+        document.getElementById('test-progression').addEventListener('click', async () => {
+            updateStatus('Initializing audio...');
+
+            const initialized = await synth.initialize();
+            if (!initialized) {
+                updateStatus('❌ Failed to initialize audio!');
+                return;
+            }
+
+            updateStatus('Playing progression: C-G-Am-F...');
+
+            const chords = [
+                [60, 64, 67],  // C Major
+                [67, 71, 74],  // G Major
+                [69, 72, 76],  // A Minor
+                [65, 69, 72]   // F Major
+            ];
+
+            let index = 0;
+            const playNext = () => {
+                if (index < chords.length) {
+                    synth.playChord(chords[index], 0.5);
+                    updateStatus(`Playing chord ${index + 1}/4...`);
+                    index++;
+                    setTimeout(playNext, 500);
+                } else {
+                    updateStatus('✅ Progression finished! Did you hear 4 chords?');
+                }
+            };
+
+            playNext();
+        });
+
+        updateStatus('Ready! Click any button to test audio.');
+    </script>
+</body>
+</html>

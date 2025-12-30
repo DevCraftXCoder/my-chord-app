@@ -19,11 +19,13 @@ class AudioSynth {
 
             // Create master volume control
             this.masterGain = this.audioContext.createGain();
-            this.masterGain.gain.value = 0.3; // 30% volume
+            this.masterGain.gain.value = 0.5; // 50% volume (increased for better audibility)
             this.masterGain.connect(this.audioContext.destination);
 
             this.isInitialized = true;
-            console.log('[Audio] Web Audio synthesizer initialized');
+            console.log('[Audio] ✅ Web Audio synthesizer initialized successfully');
+            console.log('[Audio] Sample rate:', this.audioContext.sampleRate);
+            console.log('[Audio] State:', this.audioContext.state);
             return true;
         } catch (error) {
             console.error('[Audio] Failed to initialize:', error);
@@ -45,7 +47,7 @@ class AudioSynth {
 
         const freq = this.midiToFreq(midiNote);
         const now = this.audioContext.currentTime;
-        const volume = (velocity / 127) * 0.3; // Scale velocity to 0-0.3
+        const volume = (velocity / 127) * 0.6; // Scale velocity to 0-0.6 (louder)
 
         // Create oscillators for a richer piano-like sound
         const osc1 = this.audioContext.createOscillator();
@@ -151,13 +153,13 @@ class AudioSynth {
     // Play a chord (multiple notes simultaneously)
     playChord(midiNotes, duration) {
         if (!this.isInitialized) {
-            console.warn('[Audio] Not initialized');
+            console.warn('[Audio] ❌ Not initialized');
             return [];
         }
 
-        console.log(`[Audio] Playing chord: ${midiNotes} for ${duration}s`);
+        console.log(`[Audio] 🎵 Playing chord: ${midiNotes} for ${duration}s at volume ${this.masterGain.gain.value}`);
 
-        const noteIds = midiNotes.map(note => this.playNote(note, 100, duration));
+        const noteIds = midiNotes.map(note => this.playNote(note, 127, duration)); // Full velocity
         return noteIds;
     }
 

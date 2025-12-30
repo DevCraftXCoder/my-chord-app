@@ -157,12 +157,18 @@ async function handlePlay() {
     }
 
     // Initialize audio on first play (requires user interaction)
+    console.log('[App] Checking audio initialization...');
     if (!audioSynth.isInitialized) {
+        console.log('[App] Initializing audio for first time...');
         const initialized = await audioSynth.initialize();
         if (!initialized) {
+            console.error('[App] ❌ Failed to initialize audio');
             updateStatus('Failed to initialize audio', 'error');
             return;
         }
+        console.log('[App] ✅ Audio initialized');
+    } else {
+        console.log('[App] ✅ Audio already initialized');
     }
 
     const bpm = parseInt(bpmSlider.value);
@@ -201,6 +207,8 @@ async function playProgression(bpm, loop) {
                 // Calculate duration in seconds
                 const secondsPerBeat = 60 / bpm;
                 const duration = secondsPerBeat * chord.beats;
+
+                console.log(`[App] Playing ${chord.root}${chord.chord_type}: notes ${midiNotes}, duration ${duration}s`);
 
                 // Play the chord with Web Audio
                 audioSynth.playChord(midiNotes, duration);
