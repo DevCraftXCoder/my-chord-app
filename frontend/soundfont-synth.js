@@ -19,7 +19,7 @@ class SoundFontSynth {
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
             this.masterGain = this.audioContext.createGain();
-            this.masterGain.gain.value = 1.2; // Higher default volume for chords
+            this.masterGain.gain.value = 2.0; // Higher default volume for chords
             this.masterGain.connect(this.audioContext.destination);
 
             this.isInitialized = true;

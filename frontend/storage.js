@@ -7,8 +7,30 @@ class StorageManager {
 
     // Get all saved progressions
     getAll() {
-        const data = localStorage.getItem(this.storageKey);
-        return data ? JSON.parse(data) : [];
+        try {
+            const data = localStorage.getItem(this.storageKey);
+            if (!data) return [];
+
+            const parsed = JSON.parse(data);
+
+            // Security: Validate structure
+            if (!Array.isArray(parsed)) {
+                console.warn('[Storage] Invalid data format, resetting');
+                return [];
+            }
+
+            // Security: Validate each item
+            return parsed.filter(item =>
+                item &&
+                typeof item.id === 'number' &&
+                typeof item.name === 'string' &&
+                Array.isArray(item.progression) &&
+                typeof item.bpm === 'number'
+            );
+        } catch (error) {
+            console.error('[Storage] Failed to parse data:', error);
+            return [];
+        }
     }
 
     // Save a progression
@@ -87,19 +109,48 @@ class StorageManager {
 
     // Import from JSON file
     importFromFile(file, callback) {
+        // Security: Check file size (max 1MB)
+        if (file.size > 1024 * 1024) {
+            alert('File too large. Maximum size is 1MB.');
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = (e) => {
             try {
                 const data = JSON.parse(e.target.result);
-                if (data.progression && Array.isArray(data.progression)) {
-                    callback(data);
-                    console.log('[Storage] Imported from file:', data.name);
-                } else {
-                    throw new Error('Invalid file format');
+
+                // Security: Validate structure thoroughly
+                if (!data.progression || !Array.isArray(data.progression)) {
+                    throw new Error('Invalid progression data');
                 }
+
+                if (data.progression.length > 100) {
+                    throw new Error('Progression too long (max 100 chords)');
+                }
+
+                // Security: Validate each chord
+                for (const chord of data.progression) {
+                    if (!chord.root || !chord.chord_type || typeof chord.beats !== 'number') {
+                        throw new Error('Invalid chord format');
+                    }
+                    if (chord.beats < 1 || chord.beats > 16) {
+                        throw new Error('Invalid beats value (must be 1-16)');
+                    }
+                }
+
+                // Security: Sanitize name
+                if (data.name) {
+                    const div = document.createElement('div');
+                    div.textContent = data.name;
+                    data.name = div.innerHTML.substring(0, 100);
+                }
+
+                callback(data);
+                console.log('[Storage] Imported from file:', data.name);
             } catch (error) {
                 console.error('[Storage] Import failed:', error);
-                alert('Failed to import file. Please check the format.');
+                alert('Failed to import file: ' + error.message);
             }
         };
         reader.readAsText(file);

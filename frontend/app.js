@@ -2,6 +2,13 @@
 
 const API_BASE_URL = 'http://localhost:8000';
 
+// Security: HTML sanitization helper
+function sanitizeHTML(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
 // State
 let progression = [];
 let currentEditIndex = null;
@@ -461,12 +468,27 @@ function showChordsInKey() {
         ? keyHelper.getChordsInMajorKey(root)
         : keyHelper.getChordsInMinorKey(root);
 
-    let html = `<h4>Chords in ${root} ${mode}:</h4><div class="key-chord-grid">`;
+    // Clear container
+    keyInfo.innerHTML = '';
+
+    // Create header
+    const header = document.createElement('h4');
+    header.textContent = `Chords in ${root} ${mode}:`;
+    keyInfo.appendChild(header);
+
+    // Create grid
+    const grid = document.createElement('div');
+    grid.className = 'key-chord-grid';
+
     chords.forEach(chord => {
-        html += `<div class="key-chord" onclick="addChordFromKey('${chord.root}', '${chord.type}')">${chord.degree}: ${chord.root}${chord.type === 'Major' ? '' : chord.type}</div>`;
+        const chordDiv = document.createElement('div');
+        chordDiv.className = 'key-chord';
+        chordDiv.textContent = `${chord.degree}: ${chord.root}${chord.type === 'Major' ? '' : chord.type}`;
+        chordDiv.addEventListener('click', () => addChordFromKey(chord.root, chord.type));
+        grid.appendChild(chordDiv);
     });
-    html += '</div>';
-    keyInfo.innerHTML = html;
+
+    keyInfo.appendChild(grid);
 }
 
 function suggestProgression() {
@@ -474,14 +496,32 @@ function suggestProgression() {
     const mode = keyMode.value;
     const suggestions = keyHelper.getSuggestedProgressions(root, mode);
 
-    let html = `<h4>Suggested Progressions in ${root} ${mode}:</h4>`;
+    // Clear container
+    keyInfo.innerHTML = '';
+
+    // Create header
+    const header = document.createElement('h4');
+    header.textContent = `Suggested Progressions in ${root} ${mode}:`;
+    keyInfo.appendChild(header);
+
     suggestions.forEach(sugg => {
-        html += `<div class="progression-suggestion" onclick='loadSuggestedProgression(${JSON.stringify(sugg.progression)})'>
-            <strong>${sugg.name}</strong><br>
-            ${sugg.progression.map(c => c.root + (c.chord_type === 'Major' ? '' : c.chord_type)).join(' - ')}
-        </div>`;
+        const suggDiv = document.createElement('div');
+        suggDiv.className = 'progression-suggestion';
+        suggDiv.addEventListener('click', () => loadSuggestedProgression(sugg.progression));
+
+        const nameStrong = document.createElement('strong');
+        nameStrong.textContent = sugg.name;
+        suggDiv.appendChild(nameStrong);
+
+        suggDiv.appendChild(document.createElement('br'));
+
+        const chordsText = document.createTextNode(
+            sugg.progression.map(c => c.root + (c.chord_type === 'Major' ? '' : c.chord_type)).join(' - ')
+        );
+        suggDiv.appendChild(chordsText);
+
+        keyInfo.appendChild(suggDiv);
     });
-    keyInfo.innerHTML = html;
 }
 
 window.addChordFromKey = function(root, type) {
@@ -498,7 +538,11 @@ window.loadSuggestedProgression = function(prog) {
 
 // Storage
 function saveProgression() {
-    const name = progressionNameInput.value.trim() || `Progression ${Date.now()}`;
+    let name = progressionNameInput.value.trim() || `Progression ${Date.now()}`;
+
+    // Security: Sanitize and limit progression name length
+    name = sanitizeHTML(name).substring(0, 100);
+
     if (progression.length === 0) {
         updateStatus('Add some chords first!', 'error');
         return;
@@ -547,21 +591,54 @@ function displaySavedProgressions() {
         return;
     }
 
-    let html = '';
+    // Clear container
+    savedProgressionsContainer.innerHTML = '';
+
+    // Create elements safely without innerHTML for user data
     saved.forEach(item => {
-        html += `<div class="saved-progression-item">
-            <div class="saved-progression-info">
-                <div class="saved-progression-name">${item.name}</div>
-                <div class="saved-progression-meta">${item.progression.length} chords • ${item.bpm} BPM</div>
-            </div>
-            <div class="saved-progression-actions">
-                <button class="btn btn-primary" onclick="loadSavedProgression(${item.id})">Load</button>
-                <button class="btn btn-secondary" onclick="exportSavedProgression(${item.id})">Export</button>
-                <button class="btn btn-danger" onclick="deleteSavedProgression(${item.id})">Delete</button>
-            </div>
-        </div>`;
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'saved-progression-item';
+
+        const infoDiv = document.createElement('div');
+        infoDiv.className = 'saved-progression-info';
+
+        const nameDiv = document.createElement('div');
+        nameDiv.className = 'saved-progression-name';
+        nameDiv.textContent = item.name; // Safe: uses textContent instead of innerHTML
+
+        const metaDiv = document.createElement('div');
+        metaDiv.className = 'saved-progression-meta';
+        metaDiv.textContent = `${item.progression.length} chords • ${item.bpm} BPM`;
+
+        infoDiv.appendChild(nameDiv);
+        infoDiv.appendChild(metaDiv);
+
+        const actionsDiv = document.createElement('div');
+        actionsDiv.className = 'saved-progression-actions';
+
+        const loadBtn = document.createElement('button');
+        loadBtn.className = 'btn btn-primary';
+        loadBtn.textContent = 'Load';
+        loadBtn.addEventListener('click', () => loadSavedProgression(item.id));
+
+        const exportBtn = document.createElement('button');
+        exportBtn.className = 'btn btn-secondary';
+        exportBtn.textContent = 'Export';
+        exportBtn.addEventListener('click', () => exportSavedProgression(item.id));
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-danger';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.addEventListener('click', () => deleteSavedProgression(item.id));
+
+        actionsDiv.appendChild(loadBtn);
+        actionsDiv.appendChild(exportBtn);
+        actionsDiv.appendChild(deleteBtn);
+
+        itemDiv.appendChild(infoDiv);
+        itemDiv.appendChild(actionsDiv);
+        savedProgressionsContainer.appendChild(itemDiv);
     });
-    savedProgressionsContainer.innerHTML = html;
 }
 
 window.loadSavedProgression = function(id) {

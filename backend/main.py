@@ -8,6 +8,7 @@ from pydantic import BaseModel, Field
 from typing import List, Optional
 import asyncio
 import threading
+import os
 
 from chord_engine import ChordEngine
 from timing_engine import TimingEngine, ChordTiming
@@ -16,20 +17,18 @@ from synth_engine import SynthEngine
 app = FastAPI(title="Chord Progression API", version="1.0.0")
 
 # CORS middleware for frontend communication
-# SECURITY FIX: Restrict CORS to specific origins only
+# Security: Use environment variable for production origins
+ALLOWED_ORIGINS = os.getenv(
+    'ALLOWED_ORIGINS',
+    'http://localhost,http://localhost:80,http://localhost:8080,http://127.0.0.1,http://127.0.0.1:80,http://127.0.0.1:8080'
+).split(',')
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost",
-        "http://localhost:80",
-        "http://localhost:8080",
-        "http://127.0.0.1",
-        "http://127.0.0.1:80",
-        "http://127.0.0.1:8080",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],  # Restrict to needed methods only
+    allow_headers=["Content-Type", "Accept"],  # Restrict headers
 )
 
 # Initialize engines
