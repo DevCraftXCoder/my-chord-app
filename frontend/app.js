@@ -140,6 +140,8 @@ function updateProgressionDisplay() {
     progression.forEach((chord, index) => {
         const chordSlot = document.createElement('div');
         chordSlot.className = 'chord-slot';
+        chordSlot.draggable = true;
+        chordSlot.dataset.index = index;
 
         // Format chord name display
         let chordDisplay = chord.root;
@@ -158,6 +160,12 @@ function updateProgressionDisplay() {
                 openChordPicker(index);
             }
         });
+
+        // Add drag-drop event listeners
+        chordSlot.addEventListener('dragstart', handleDragStart);
+        chordSlot.addEventListener('dragover', handleDragOver);
+        chordSlot.addEventListener('drop', handleDrop);
+        chordSlot.addEventListener('dragend', handleDragEnd);
 
         progressionContainer.appendChild(chordSlot);
     });
@@ -198,9 +206,12 @@ async function handlePlay() {
     stopBtn.disabled = false;
     updateStatus(`Playing ${loop ? '(looping)' : ''}`, 'success');
 
-    // Start drums if enabled
-    if (drumsEnabled && drumsEnabled.checked && drumTrack) {
-        drumTrack.start(bpm);
+    // Initialize and start drums if enabled
+    if (drumsEnabled && drumsEnabled.checked) {
+        initializeDrums();
+        if (drumTrack) {
+            drumTrack.start(bpm);
+        }
     }
 
     // Start local audio playback
@@ -357,14 +368,13 @@ const themeToggle = document.getElementById('theme-toggle');
 
 // Initialize new features
 function initNewFeatures() {
-    // Initialize modules
-    drumTrack = new DrumTrack(audioSynth.audioContext);
+    // Initialize modules (drums will be initialized when audio context is ready)
     keyHelper = new KeyHelper();
     storageManager = new StorageManager();
 
     // Setup event listeners for new features
     drumsEnabled.addEventListener('change', handleDrumsToggle);
-    drumPattern.addEventListener('change', (e) => drumTrack.setPattern(e.target.value));
+    drumPattern.addEventListener('change', handleDrumPatternChange);
     drumVolume.addEventListener('input', handleDrumVolumeChange);
     showKeyChordsBtn.addEventListener('click', showChordsInKey);
     suggestProgressionBtn.addEventListener('click', suggestProgression);
@@ -386,17 +396,36 @@ function initNewFeatures() {
 }
 
 // Drums
+function initializeDrums() {
+    if (!drumTrack && audioSynth.audioContext) {
+        drumTrack = new DrumTrack(audioSynth.audioContext);
+        console.log('[App] Drum track initialized');
+    }
+}
+
 function handleDrumsToggle() {
     if (drumsEnabled.checked && isPlaying) {
-        drumTrack.start(parseInt(bpmSlider.value));
-    } else {
+        initializeDrums();
+        if (drumTrack) {
+            drumTrack.start(parseInt(bpmSlider.value));
+        }
+    } else if (drumTrack) {
         drumTrack.stop();
+    }
+}
+
+function handleDrumPatternChange(e) {
+    initializeDrums();
+    if (drumTrack) {
+        drumTrack.setPattern(e.target.value);
     }
 }
 
 function handleDrumVolumeChange() {
     const volume = parseInt(drumVolume.value) / 100;
-    drumTrack.setVolume(volume);
+    if (drumTrack) {
+        drumTrack.setVolume(volume);
+    }
     drumVolumeValue.textContent = `${drumVolume.value}%`;
 }
 
@@ -586,19 +615,6 @@ function handleKeyboardShortcuts(e) {
 }
 
 // Drag and Drop for chord reordering
-function makeChordsDraggable() {
-    const chordSlots = document.querySelectorAll('.chord-slot');
-    chordSlots.forEach((slot, index) => {
-        slot.draggable = true;
-        slot.dataset.index = index;
-
-        slot.addEventListener('dragstart', handleDragStart);
-        slot.addEventListener('dragover', handleDragOver);
-        slot.addEventListener('drop', handleDrop);
-        slot.addEventListener('dragend', handleDragEnd);
-    });
-}
-
 let draggedIndex = null;
 
 function handleDragStart() {
@@ -630,11 +646,4 @@ function handleDragEnd() {
         slot.classList.remove('dragging', 'drag-over');
     });
     draggedIndex = null;
-}
-
-// Update the original updateProgressionDisplay to add drag-drop
-const originalUpdateProgressionDisplay = updateProgressionDisplay;
-function updateProgressionDisplay() {
-    originalUpdateProgressionDisplay();
-    makeChordsDraggable();
 }
