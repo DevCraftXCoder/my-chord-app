@@ -178,6 +178,13 @@ class SoundFontSynth {
         this.activeNotes.clear();
     }
 
+    // Set master volume
+    setVolume(volume) {
+        if (this.masterGain) {
+            this.masterGain.gain.value = volume;
+        }
+    }
+
     // Get available instruments
     getAvailableInstruments() {
         return [

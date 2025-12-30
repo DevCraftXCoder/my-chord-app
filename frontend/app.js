@@ -446,10 +446,11 @@ function handleDrumVolumeChange() {
 
 function handleChordVolumeChange() {
     const volume = parseInt(chordVolume.value) / 100;
-    if (audioSynth && audioSynth.masterGain) {
-        audioSynth.masterGain.gain.value = volume;
+    if (audioSynth) {
+        audioSynth.setVolume(volume);
     }
     chordVolumeValue.textContent = `${chordVolume.value}%`;
+    console.log('[App] Chord volume changed to:', volume);
 }
 
 // Key Helper
