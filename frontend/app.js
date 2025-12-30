@@ -272,9 +272,12 @@ async function handlePlay() {
         // Calculate synchronized start time for resume
         const syncStartTime = audioSynth.audioContext.currentTime + 0.1;
 
-        // Resume drums if enabled with synchronized start time
-        if (drumsEnabled && drumsEnabled.checked && drumTrack) {
-            drumTrack.start(bpm, syncStartTime);
+        // Initialize and start drums if enabled with synchronized start time
+        if (drumsEnabled && drumsEnabled.checked) {
+            initializeDrums();
+            if (drumTrack) {
+                drumTrack.start(bpm, syncStartTime);
+            }
         }
 
         // Resume playback from paused position with synchronized timing
