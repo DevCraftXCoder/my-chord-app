@@ -106,7 +106,7 @@ class DrumTrack {
         osc.frequency.setValueAtTime(60, time);
         osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.8);
 
-        gain.gain.setValueAtTime(1.5, time);
+        gain.gain.setValueAtTime(0.6, time);
         gain.gain.exponentialRampToValueAtTime(0.01, time + 0.8);
 
         osc.connect(gain);
@@ -144,7 +144,7 @@ class DrumTrack {
         noise.buffer = buffer;
         noiseFilter.type = 'highpass';
         noiseFilter.frequency.value = 2000;
-        noiseGain.gain.setValueAtTime(1.0, time);
+        noiseGain.gain.setValueAtTime(0.4, time);
         noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
 
         noise.connect(noiseFilter);
