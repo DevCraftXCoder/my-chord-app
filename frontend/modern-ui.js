@@ -305,15 +305,20 @@ function addQuickChord(chordName) {
         type = 'Dim';
     }
 
-    // Set the values in the chord picker
-    document.getElementById('root-picker').value = root;
-    document.getElementById('type-picker').value = type;
-    document.getElementById('beats-picker').value = 4;
+    // Directly add the chord to progression (more reliable than clicking buttons)
+    const chord = {
+        root: root,
+        chord_type: type,
+        beats: 4
+    };
 
-    // Trigger the confirm button to add the chord
-    const confirmBtn = document.getElementById('confirm-chord-btn');
-    if (confirmBtn) {
-        confirmBtn.click();
+    // Access the global progression array from app.js
+    if (typeof progression !== 'undefined' && typeof updateProgressionDisplay === 'function') {
+        progression.push(chord);
+        updateProgressionDisplay();
+        console.log('[ModernUI] Added quick chord:', chordName, 'Progression length:', progression.length);
+    } else {
+        console.error('[ModernUI] Could not add chord - progression or updateProgressionDisplay not found');
     }
 }
 
