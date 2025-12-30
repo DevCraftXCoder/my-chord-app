@@ -339,6 +339,22 @@ body.light-mode {
     --border: #dee2e6;
 }
 
+/* Instrument Section */
+.instrument-controls {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.instrument-status {
+    font-size: 0.9rem;
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    background: var(--surface-light);
+    border-radius: 6px;
+}
+
 /* Drums Section */
 .drums-controls {
     display: flex;

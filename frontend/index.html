@@ -23,6 +23,42 @@
                 </div>
             </section>
 
+            <!-- Instrument Selector -->
+            <section class="instrument-section">
+                <h2>🎹 Instrument</h2>
+                <div class="instrument-controls">
+                    <div class="picker-group">
+                        <label>Sound:</label>
+                        <select id="instrument-selector">
+                            <optgroup label="Piano">
+                                <option value="acoustic_grand_piano" selected>Acoustic Grand Piano</option>
+                                <option value="bright_acoustic_piano">Bright Acoustic Piano</option>
+                                <option value="electric_grand_piano">Electric Grand Piano</option>
+                            </optgroup>
+                            <optgroup label="Guitar">
+                                <option value="acoustic_guitar_nylon">Acoustic Guitar (Nylon)</option>
+                                <option value="acoustic_guitar_steel">Acoustic Guitar (Steel)</option>
+                                <option value="electric_guitar_clean">Electric Guitar (Clean)</option>
+                                <option value="electric_guitar_jazz">Electric Guitar (Jazz)</option>
+                                <option value="overdriven_guitar">Overdriven Guitar</option>
+                                <option value="distortion_guitar">Distortion Guitar</option>
+                            </optgroup>
+                            <optgroup label="Bass">
+                                <option value="acoustic_bass">Acoustic Bass</option>
+                                <option value="electric_bass_finger">Electric Bass (Finger)</option>
+                            </optgroup>
+                            <optgroup label="Strings">
+                                <option value="violin">Violin</option>
+                                <option value="cello">Cello</option>
+                                <option value="string_ensemble_1">String Ensemble</option>
+                                <option value="synth_strings_1">Synth Strings</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <span id="instrument-status" class="instrument-status">Loading piano...</span>
+                </div>
+            </section>
+
             <!-- Chord Progression Builder -->
             <section class="progression-section">
                 <h2>Chord Progression</h2>
@@ -238,7 +274,7 @@
     <script src="storage.js"></script>
     <script src="drums.js"></script>
     <script src="key-helper.js"></script>
-    <script src="audio-synth.js"></script>
+    <script src="soundfont-synth.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

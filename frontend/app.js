@@ -7,7 +7,7 @@ let progression = [];
 let currentEditIndex = null;
 let isPlaying = false;
 
-// Web Audio Synthesizer
+// SoundFont Synthesizer
 let audioSynth = null;
 
 // DOM Elements
@@ -32,8 +32,8 @@ const loadPresetBtn = document.getElementById('load-preset-btn');
 init();
 
 async function init() {
-    // Initialize Web Audio synthesizer
-    audioSynth = new AudioSynth();
+    // Initialize SoundFont synthesizer
+    audioSynth = new SoundFontSynth();
 
     setupEventListeners();
     await checkBackendStatus();
@@ -365,6 +365,8 @@ const exportBtn = document.getElementById('export-btn');
 const importFile = document.getElementById('import-file');
 const savedProgressionsContainer = document.getElementById('saved-progressions');
 const themeToggle = document.getElementById('theme-toggle');
+const instrumentSelector = document.getElementById('instrument-selector');
+const instrumentStatus = document.getElementById('instrument-status');
 
 // Initialize new features
 function initNewFeatures() {
@@ -382,6 +384,7 @@ function initNewFeatures() {
     exportBtn.addEventListener('click', exportProgression);
     importFile.addEventListener('change', importProgression);
     themeToggle.addEventListener('click', toggleTheme);
+    instrumentSelector.addEventListener('change', handleInstrumentChange);
 
     // Keyboard shortcuts
     document.addEventListener('keydown', handleKeyboardShortcuts);
@@ -611,6 +614,25 @@ function handleKeyboardShortcuts(e) {
     // Escape = Close Modal
     if (e.code === 'Escape') {
         closeChordPicker();
+    }
+}
+
+// Instrument Selector
+async function handleInstrumentChange() {
+    const instrument = instrumentSelector.value;
+    const instrumentName = instrumentSelector.options[instrumentSelector.selectedIndex].text;
+
+    instrumentStatus.textContent = `Loading ${instrumentName}...`;
+    instrumentStatus.style.color = 'var(--text-secondary)';
+
+    const success = await audioSynth.loadInstrument(instrument);
+
+    if (success) {
+        instrumentStatus.textContent = `✓ ${instrumentName}`;
+        instrumentStatus.style.color = 'var(--success-color)';
+    } else {
+        instrumentStatus.textContent = `✗ Failed to load`;
+        instrumentStatus.style.color = 'var(--danger-color)';
     }
 }
 
