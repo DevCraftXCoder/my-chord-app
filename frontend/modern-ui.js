@@ -319,6 +319,12 @@ function addQuickChord(chordName) {
 
     // Access the global progression array from app.js
     if (typeof progression !== 'undefined' && typeof updateProgressionDisplay === 'function') {
+        // If currently playing, stop playback to prevent audio glitches
+        if (typeof isPlaying !== 'undefined' && isPlaying && typeof handleStop === 'function') {
+            console.log('[ModernUI] Stopping playback before adding chord');
+            handleStop();
+        }
+
         progression.push(chord);
         console.log('[ModernUI] After push - Progression:', JSON.stringify(progression));
         console.log('[ModernUI] Progression length:', progression.length);
