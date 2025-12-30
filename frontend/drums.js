@@ -9,35 +9,35 @@ class DrumTrack {
         this.currentBeat = 0;
         this.volume = 0.3; // 30% volume for drums
 
-        // Drum patterns (16th note grid) - Kick and Snare only
+        // Modern trap/hip-hop drum patterns - Kick and Snare only
         this.patterns = {
             'basic': {
-                name: 'Basic Rock',
-                kick:  [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
+                name: 'Trap',
+                kick:  [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 1, 0],
                 snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
                 hihat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             },
             'pop': {
-                name: 'Pop Beat',
-                kick:  [1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0, 0, 0, 0],
-                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+                name: 'Melodic Trap',
+                kick:  [1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 1],
                 hihat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             },
             'jazz': {
-                name: 'Jazz Swing',
-                kick:  [1, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-                snare: [0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+                name: 'Bouncy',
+                kick:  [1, 0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
                 hihat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             },
             'funk': {
-                name: 'Funk Groove',
-                kick:  [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0],
-                snare: [0, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0],
+                name: 'Hard',
+                kick:  [1, 0, 0, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 0, 1, 1],
+                snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0],
                 hihat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             },
             'ballad': {
-                name: 'Ballad',
-                kick:  [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+                name: 'Chill Trap',
+                kick:  [1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0],
                 snare: [0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
                 hihat: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
             }
@@ -55,39 +55,40 @@ class DrumTrack {
         }
     }
 
-    // Synthesize kick drum
+    // Synthesize 808-style kick drum
     playKick(time = this.audioContext.currentTime) {
         const osc = this.audioContext.createOscillator();
         const gain = this.audioContext.createGain();
 
-        osc.frequency.setValueAtTime(150, time);
-        osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.5);
+        // Lower, punchier 808 sound
+        osc.frequency.setValueAtTime(60, time);
+        osc.frequency.exponentialRampToValueAtTime(0.01, time + 0.8);
 
-        gain.gain.setValueAtTime(1, time);
-        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.5);
+        gain.gain.setValueAtTime(1.5, time);
+        gain.gain.exponentialRampToValueAtTime(0.01, time + 0.8);
 
         osc.connect(gain);
         gain.connect(this.masterGain);
 
         osc.start(time);
-        osc.stop(time + 0.5);
+        osc.stop(time + 0.8);
     }
 
-    // Synthesize snare drum
+    // Synthesize trap-style snare drum (snappy and crisp)
     playSnare(time = this.audioContext.currentTime) {
-        // Tone component
+        // Tone component - higher pitch for modern trap sound
         const osc = this.audioContext.createOscillator();
         const oscGain = this.audioContext.createGain();
 
-        osc.frequency.setValueAtTime(200, time);
-        oscGain.gain.setValueAtTime(0.3, time);
-        oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+        osc.frequency.setValueAtTime(250, time);
+        oscGain.gain.setValueAtTime(0.4, time);
+        oscGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
 
         osc.connect(oscGain);
         oscGain.connect(this.masterGain);
 
-        // Noise component
-        const bufferSize = this.audioContext.sampleRate * 0.2;
+        // Noise component - brighter and snappier
+        const bufferSize = this.audioContext.sampleRate * 0.15;
         const buffer = this.audioContext.createBuffer(1, bufferSize, this.audioContext.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) {
@@ -100,18 +101,18 @@ class DrumTrack {
 
         noise.buffer = buffer;
         noiseFilter.type = 'highpass';
-        noiseFilter.frequency.value = 1000;
-        noiseGain.gain.setValueAtTime(0.7, time);
-        noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.2);
+        noiseFilter.frequency.value = 2000;
+        noiseGain.gain.setValueAtTime(1.0, time);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, time + 0.15);
 
         noise.connect(noiseFilter);
         noiseFilter.connect(noiseGain);
         noiseGain.connect(this.masterGain);
 
         osc.start(time);
-        osc.stop(time + 0.2);
+        osc.stop(time + 0.15);
         noise.start(time);
-        noise.stop(time + 0.2);
+        noise.stop(time + 0.15);
     }
 
     // Synthesize hi-hat
