@@ -34,6 +34,15 @@ init();
 async function init() {
     // Initialize SoundFont synthesizer
     audioSynth = new SoundFontSynth();
+    const initialized = await audioSynth.initialize();
+
+    if (initialized) {
+        instrumentStatus.textContent = '✓ Acoustic Grand Piano';
+        instrumentStatus.style.color = 'var(--success-color)';
+    } else {
+        instrumentStatus.textContent = '✗ Failed to load';
+        instrumentStatus.style.color = 'var(--danger-color)';
+    }
 
     setupEventListeners();
     await checkBackendStatus();
