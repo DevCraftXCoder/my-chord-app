@@ -18,12 +18,34 @@ class SoundFontSynth {
 
         try {
             this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Create master gain (moderate volume to prevent clipping)
             this.masterGain = this.audioContext.createGain();
-            this.masterGain.gain.value = 2.0; // Higher default volume for chords
-            this.masterGain.connect(this.audioContext.destination);
+            this.masterGain.gain.value = 0.6;
+
+            // Create compressor for better dynamics and loudness
+            this.compressor = this.audioContext.createDynamicsCompressor();
+            this.compressor.threshold.value = -18;
+            this.compressor.knee.value = 15;
+            this.compressor.ratio.value = 6;
+            this.compressor.attack.value = 0.003;
+            this.compressor.release.value = 0.1;
+
+            // Create limiter (prevents clipping/distortion)
+            this.limiter = this.audioContext.createDynamicsCompressor();
+            this.limiter.threshold.value = -0.5;
+            this.limiter.knee.value = 0;
+            this.limiter.ratio.value = 20;
+            this.limiter.attack.value = 0.001;
+            this.limiter.release.value = 0.01;
+
+            // Connect chain: masterGain -> compressor -> limiter -> destination
+            this.masterGain.connect(this.compressor);
+            this.compressor.connect(this.limiter);
+            this.limiter.connect(this.audioContext.destination);
 
             this.isInitialized = true;
-            console.log('[SoundFont] Audio context initialized');
+            console.log('[SoundFont] Audio initialized: Gain -> Compressor -> Limiter -> Output');
 
             // Load default instrument
             await this.loadInstrument(this.instrumentName);
@@ -102,8 +124,8 @@ class SoundFontSynth {
         return noteName + octave;
     }
 
-    // Play a single note using SoundFont sample
-    playNote(midiNote, velocity = 100, duration = null) {
+    // Play a single note using SoundFont sample with scheduled timing
+    playNote(midiNote, velocity = 100, duration = null, startTime = null) {
         if (!this.isInitialized || !this.currentInstrument) {
             console.warn('[SoundFont] Not ready yet');
             return null;
@@ -131,13 +153,13 @@ class SoundFontSynth {
             source.connect(gainNode);
             gainNode.connect(this.masterGain);
 
-            // Play the note
-            const now = this.audioContext.currentTime;
-            source.start(now);
+            // Use scheduled timing or play immediately
+            const scheduledStart = startTime !== null ? startTime : this.audioContext.currentTime;
+            source.start(scheduledStart);
 
             // Stop after duration if specified
             if (duration) {
-                source.stop(now + duration);
+                source.stop(scheduledStart + duration);
             }
 
             // Track active note
@@ -156,23 +178,24 @@ class SoundFontSynth {
         }
     }
 
-    // Play a chord (multiple notes at once)
-    playChord(midiNotes, duration = 2.0) {
+    // Play a chord (multiple notes at once) with scheduled timing
+    playChord(midiNotes, duration = 2.0, startTime = null) {
         const noteIds = [];
         midiNotes.forEach(note => {
-            const id = this.playNote(note, 100, duration);
+            const id = this.playNote(note, 100, duration, startTime);
             if (id) noteIds.push(id);
         });
         return noteIds;
     }
 
-    // Stop all active notes
+    // Stop all active notes (including scheduled ones)
     stopAll() {
         this.activeNotes.forEach(({ source }) => {
             try {
-                source.stop();
+                // Stop immediately, even if scheduled for future
+                source.stop(0);
             } catch (error) {
-                // Note already stopped
+                // Note already stopped or can't be stopped
             }
         });
         this.activeNotes.clear();

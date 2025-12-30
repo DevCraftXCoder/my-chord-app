@@ -8,40 +8,168 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>🎵 MyChord</h1>
-            <p class="subtitle">by DevXCoder</p>
+        <header class="modern-header">
+            <button class="icon-btn" id="home-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </button>
+            <button class="icon-btn menu-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
+            </button>
+            <button class="icon-btn" id="settings-btn">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="3"></circle>
+                    <path d="M12 1v6m0 6v6m6-12l-3 3m-6 6l-3 3m12-6l-3-3m-6 6l-3-3m12 0l-3 3m-6-6l-3-3"></path>
+                </svg>
+            </button>
         </header>
 
+        <div class="app-title">
+            <h1>Chords</h1>
+        </div>
+
+        <!-- BPM Control - Centered -->
+        <div class="bpm-section">
+            <div class="bpm-control-vertical">
+                <div class="bpm-label">BPM</div>
+                <div class="bpm-value" id="bpm-value">120</div>
+                <input type="range" id="bpm-slider" min="30" max="300" value="120" orient="vertical">
+            </div>
+        </div>
+
         <main>
-            <!-- BPM and Save/Load Controls -->
-            <section class="bpm-section">
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 200px;">
-                        <h2 style="margin-bottom: 0.5rem;">Tempo</h2>
-                        <div class="bpm-control">
-                            <label for="bpm-slider">BPM: <span id="bpm-value">120</span></label>
-                            <input type="range" id="bpm-slider" min="30" max="300" value="120">
-                        </div>
+            <!-- Piano MIDI Keyboard at Top -->
+            <div class="piano-container">
+                <div class="piano-keyboard" id="piano-keyboard">
+                    <!-- Piano keys will be generated here -->
+                </div>
+            </div>
+
+            <!-- Single Play Button -->
+            <div class="main-play-section">
+                <button class="play-btn-modern" id="play-btn-modern">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Chords and Drums -->
+            <div class="controls-grid">
+                <!-- Chords Section -->
+                <div class="control-section">
+                    <h3>Chords</h3>
+
+                    <!-- Quick Chord Buttons - More chords in a grid -->
+                    <div class="quick-chords-extended">
+                        <button class="quick-chord-btn" data-chord="C">C</button>
+                        <button class="quick-chord-btn" data-chord="D">D</button>
+                        <button class="quick-chord-btn" data-chord="E">E</button>
+                        <button class="quick-chord-btn" data-chord="F">F</button>
+                        <button class="quick-chord-btn" data-chord="G">G</button>
+                        <button class="quick-chord-btn" data-chord="A">A</button>
+                        <button class="quick-chord-btn" data-chord="B">B</button>
+                        <button class="quick-chord-btn" data-chord="Cm">Cm</button>
+                        <button class="quick-chord-btn" data-chord="Dm">Dm</button>
+                        <button class="quick-chord-btn" data-chord="Em">Em</button>
+                        <button class="quick-chord-btn" data-chord="Fm">Fm</button>
+                        <button class="quick-chord-btn" data-chord="Gm">Gm</button>
+                        <button class="quick-chord-btn" data-chord="Am">Am</button>
+                        <button class="quick-chord-btn" data-chord="Bm">Bm</button>
                     </div>
-                    <div style="flex: 1; min-width: 300px;">
-                        <h2 style="margin-bottom: 0.5rem;">💾 Save & Load</h2>
-                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
-                            <input type="text" id="progression-name" placeholder="Name..." style="flex: 1; min-width: 120px; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color);">
-                            <button id="save-btn" class="btn btn-primary" style="padding: 0.5rem 1rem;">Save</button>
-                            <button id="export-btn" class="btn btn-secondary" style="padding: 0.5rem 0.8rem;">Export</button>
-                            <label class="btn btn-secondary import-btn" style="padding: 0.5rem 0.8rem; margin: 0;">
-                                Import
-                                <input type="file" id="import-file" accept=".json" style="display: none;">
-                            </label>
-                        </div>
+
+                    <div id="progression-container" class="chord-progression-simple">
+                        <!-- Chord slots will be added here -->
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem; margin-bottom: 1rem;">
+                        <button id="add-chord-btn" class="add-chord-simple">+ Add</button>
+                        <button id="randomize-btn" class="randomize-btn">🎲 Random</button>
+                        <button id="clear-btn" class="clear-btn">🗑️ Clear</button>
+                    </div>
+
+                    <div class="volume-control">
+                        <label>Volume: <span id="chord-volume-value">70%</span></label>
+                        <input type="range" id="chord-volume" min="0" max="100" value="70">
                     </div>
                 </div>
+
+                <!-- Drums Section -->
+                <div class="control-section">
+                    <h3>Drums</h3>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="drums-enabled">
+                        <span class="slider"></span>
+                    </label>
+                    <select id="drum-pattern" class="modern-select">
+                        <option value="basic">Trap</option>
+                        <option value="pop">Melodic Trap</option>
+                        <option value="jazz">Bouncy</option>
+                        <option value="funk">Hard</option>
+                        <option value="ballad">Chill Trap</option>
+                        <option value="drill">Drill</option>
+                        <option value="rage">Rage</option>
+                        <option value="hyperpop">Hyperpop</option>
+                        <option value="plugg">Plugg</option>
+                        <option value="jersey">Jersey Club</option>
+                        <option value="emo">Emo Trap</option>
+                        <option value="yeat">Yeat Style</option>
+                    </select>
+                    <div class="volume-control">
+                        <label>Volume: <span id="drum-volume-value">30%</span></label>
+                        <input type="range" id="drum-volume" min="0" max="100" value="30">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Original controls (hidden but functional) -->
+            <section class="top-controls" style="position: absolute; left: -9999px;">
+                <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 2rem; align-items: center; padding: 1rem; background: var(--card-bg); border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <!-- Playback Controls -->
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <button id="play-btn" class="btn btn-primary" style="padding: 0.75rem 1.5rem; font-size: 1rem;">▶ Play</button>
+                        <button id="stop-btn" class="btn btn-danger" style="padding: 0.75rem 1.5rem; font-size: 1rem;" disabled>■ Stop</button>
+                        <label class="loop-toggle" style="margin-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem; cursor: pointer;">
+                            <input type="checkbox" id="loop-checkbox" checked>
+                            Loop
+                        </label>
+                    </div>
+
+                    <!-- BPM Control -->
+                    <div style="display: flex; align-items: center; gap: 1rem; justify-content: center;">
+                        <label for="bpm-slider" style="white-space: nowrap; font-weight: 500;">BPM: <span id="bpm-value">120</span></label>
+                        <input type="range" id="bpm-slider" min="30" max="300" value="120" style="flex: 1; max-width: 200px;">
+                    </div>
+
+                    <!-- Save/Load Controls -->
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="text" id="progression-name" placeholder="Name..." style="width: 120px; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color);">
+                        <button id="save-btn" class="btn btn-primary" style="padding: 0.5rem 1rem;">💾 Save</button>
+                        <button id="export-btn" class="btn btn-secondary" style="padding: 0.5rem 0.8rem;">Export</button>
+                        <label class="btn btn-secondary import-btn" style="padding: 0.5rem 0.8rem; margin: 0; cursor: pointer;">
+                            Import
+                            <input type="file" id="import-file" accept=".json" style="display: none;">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Status Display -->
+                <div id="playback-status" style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: var(--text-secondary);">
+                    Ready to play
+                </div>
+
+                <!-- Saved Progressions -->
                 <div id="saved-progressions" class="saved-progressions" style="margin-top: 1rem;"></div>
             </section>
 
-            <!-- Instrument Selector -->
-            <section class="instrument-section">
+            <!-- Instrument Selector (HIDDEN) -->
+            <section class="instrument-section" style="display: none;">
                 <h2>🎹 Instrument</h2>
                 <div class="instrument-controls">
                     <div class="picker-group">
@@ -82,14 +210,49 @@
                 </div>
             </section>
 
-            <!-- Chord Progression Builder -->
-            <section class="progression-section">
-                <h2>Chord Progression</h2>
-                <div id="progression-container" class="progression-container">
-                    <!-- Chord slots will be added here -->
-                </div>
-                <button id="add-chord-btn" class="btn btn-secondary">+ Add Chord</button>
-            </section>
+            <!-- Chord Progression & Drums (HIDDEN - Using new layout above) -->
+            <div style="display: none; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.5rem;">
+                <!-- Chord Progression Builder -->
+                <section class="progression-section">
+                    <h2>🎼 Chord Progression</h2>
+                    <div id="progression-container" class="progression-container">
+                        <!-- Chord slots will be added here -->
+                    </div>
+                    <button id="add-chord-btn" class="btn btn-secondary" style="width: 100%; margin-top: 0.5rem;">+ Add Chord</button>
+                </section>
+
+                <!-- Drums Section -->
+                <section class="drums-section">
+                    <h2>🥁 Drum Track</h2>
+                    <div class="drums-controls">
+                        <label class="drum-toggle" style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                            <input type="checkbox" id="drums-enabled">
+                            <span style="font-weight: 500;">Enable Drums</span>
+                        </label>
+                        <div class="picker-group" style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.3rem; font-weight: 500;">Pattern:</label>
+                            <select id="drum-pattern" style="width: 100%; padding: 0.5rem; border-radius: 6px; border: 1px solid var(--border-color);">
+                                <option value="basic">Trap</option>
+                                <option value="pop">Melodic Trap</option>
+                                <option value="jazz">Bouncy</option>
+                                <option value="funk">Hard</option>
+                                <option value="ballad">Chill Trap</option>
+                                <option value="drill">Drill</option>
+                                <option value="rage">Rage</option>
+                                <option value="hyperpop">Hyperpop</option>
+                                <option value="plugg">Plugg</option>
+                                <option value="jersey">Jersey Club</option>
+                                <option value="emo">Emo Trap</option>
+                                <option value="yeat">Yeat Style</option>
+                            </select>
+                        </div>
+                        <div class="picker-group">
+                            <label style="display: block; margin-bottom: 0.3rem; font-weight: 500;">Volume: <span id="drum-volume-value">30%</span></label>
+                            <input type="range" id="drum-volume" min="0" max="100" value="30" style="width: 100%;">
+                        </div>
+                    </div>
+                </section>
+            </div>
 
             <!-- Chord Picker Modal -->
             <div id="chord-picker-modal" class="modal">
@@ -177,54 +340,6 @@
                 </div>
             </div>
 
-            <!-- Playback Controls -->
-            <section class="playback-section">
-                <h2>Playback</h2>
-                <div class="playback-controls">
-                    <button id="play-btn" class="btn btn-primary btn-large">▶ Play</button>
-                    <button id="stop-btn" class="btn btn-danger btn-large" disabled>■ Stop</button>
-                    <label class="loop-toggle">
-                        <input type="checkbox" id="loop-checkbox" checked>
-                        Loop
-                    </label>
-                </div>
-                <div id="playback-status" class="status-display">
-                    Ready to play
-                </div>
-            </section>
-
-            <!-- Drums Section -->
-            <section class="drums-section">
-                <h2>🥁 Drum Track</h2>
-                <div class="drums-controls">
-                    <label class="drum-toggle">
-                        <input type="checkbox" id="drums-enabled">
-                        Enable Drums
-                    </label>
-                    <div class="picker-group">
-                        <label>Pattern:</label>
-                        <select id="drum-pattern">
-                            <option value="basic">Trap</option>
-                            <option value="pop">Melodic Trap</option>
-                            <option value="jazz">Bouncy</option>
-                            <option value="funk">Hard</option>
-                            <option value="ballad">Chill Trap</option>
-                            <option value="drill">Drill</option>
-                            <option value="rage">Rage</option>
-                            <option value="hyperpop">Hyperpop</option>
-                            <option value="plugg">Plugg</option>
-                            <option value="jersey">Jersey Club</option>
-                            <option value="emo">Emo Trap</option>
-                            <option value="yeat">Yeat Style</option>
-                        </select>
-                    </div>
-                    <div class="picker-group">
-                        <label>Volume: <span id="drum-volume-value">30%</span></label>
-                        <input type="range" id="drum-volume" min="0" max="100" value="30">
-                    </div>
-                </div>
-            </section>
-
             <!-- Key Helper Section -->
             <section class="key-helper-section">
                 <h2>🎹 Key Helper</h2>
@@ -259,8 +374,114 @@
                 <div id="key-info" class="key-info"></div>
             </section>
 
+            <!-- Bottom Section: Chord Selector + Preset Cards (HIDDEN) -->
+            <div class="bottom-section" style="display: none;">
+                <!-- Chord Selector (Edit button + Individual chords) -->
+                <div class="chord-selector">
+                    <button class="edit-chord-btn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                        </svg>
+                    </button>
+                    <button class="chord-circle-btn chord-active" data-chord="C">C</button>
+                    <button class="chord-circle-btn" data-chord="Am">Am</button>
+                    <button class="chord-circle-btn" data-chord="F">F</button>
+                    <button class="chord-circle-btn" data-chord="G">G</button>
+                </div>
+
+                <!-- Preset Cards Grid -->
+                <div class="preset-cards">
+                    <div class="preset-card custom-card">
+                        <div class="preset-icon">≡</div>
+                        <div class="preset-label">Custom</div>
+                    </div>
+                    <div class="preset-card essential-card">
+                        <div class="preset-pattern"></div>
+                        <div class="preset-badge">
+                            <div class="preset-title">Essential</div>
+                            <div class="preset-number">①</div>
+                        </div>
+                        <div class="preset-type">main</div>
+                    </div>
+                    <div class="preset-card essential-card-2">
+                        <div class="preset-badge">
+                            <div class="preset-title">Essential</div>
+                            <div class="preset-number">①</div>
+                        </div>
+                        <div class="preset-type">bridge</div>
+                    </div>
+                    <div class="preset-card essential-card-3">
+                        <div class="preset-badge">
+                            <div class="preset-title">Essential</div>
+                            <div class="preset-number">②</div>
+                        </div>
+                        <div class="preset-type">pre-chorus</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Playback Controls (HIDDEN) -->
+            <div class="playback-bar" style="display: none;">
+                <button class="metronome-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M12 3L2 12h3v8h14v-8h3L12 3zm0 2.5L18.5 12H17v6H7v-6H5.5L12 5.5z"/>
+                    </svg>
+                </button>
+                <button class="play-btn-modern" id="play-btn-modern">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M8 5v14l11-7z"/>
+                    </svg>
+                </button>
+                <button class="list-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"></line>
+                        <line x1="8" y1="12" x2="21" y2="12"></line>
+                        <line x1="8" y1="18" x2="21" y2="18"></line>
+                        <line x1="3" y1="6" x2="3.01" y2="6"></line>
+                        <line x1="3" y1="12" x2="3.01" y2="12"></line>
+                        <line x1="3" y1="18" x2="3.01" y2="18"></line>
+                    </svg>
+                </button>
+                <button class="next-btn">›</button>
+            </div>
+
+            <!-- Old sections hidden -->
+            <section class="key-helper-section" style="display: none;">
+                <h2>🎹 Key Helper</h2>
+                <div class="key-helper-controls">
+                    <div class="picker-group">
+                        <label>Key:</label>
+                        <select id="key-root">
+                            <option value="C">C</option>
+                            <option value="C#">C#</option>
+                            <option value="D">D</option>
+                            <option value="D#">D#</option>
+                            <option value="E">E</option>
+                            <option value="F">F</option>
+                            <option value="F#">F#</option>
+                            <option value="G">G</option>
+                            <option value="G#">G#</option>
+                            <option value="A">A</option>
+                            <option value="A#">A#</option>
+                            <option value="B">B</option>
+                        </select>
+                    </div>
+                    <div class="picker-group">
+                        <label>Mode:</label>
+                        <select id="key-mode">
+                            <option value="major">Major</option>
+                            <option value="minor">Minor</option>
+                        </select>
+                    </div>
+                    <button id="show-key-chords-btn" class="btn btn-secondary">Show Chords in Key</button>
+                    <button id="suggest-progression-btn" class="btn btn-secondary">Suggest Progression</button>
+                </div>
+                <div id="key-info" class="key-info"></div>
+            </section>
+
             <!-- Quick Start Preset -->
-            <section class="preset-section">
+            <section class="preset-section" style="display: none;">
                 <h2>Quick Start</h2>
                 <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                     <button id="load-preset-btn" class="btn btn-secondary">
@@ -273,12 +494,13 @@
             </section>
         </main>
 
-        <footer>
-            <div class="footer-controls">
+        <footer style="text-align: center; padding: 2rem; color: var(--text-secondary); font-size: 0.85rem; display: none;">
+            <p>MyChord - curated by Mobbin</p>
+            <div class="footer-controls" style="display: none;">
                 <button id="theme-toggle" class="btn btn-secondary">🌙 Dark Mode</button>
                 <span>Keyboard: Space = Play/Stop | Ctrl+S = Save | Ctrl+N = New Chord</span>
             </div>
-            <p>Backend: <span id="backend-status" class="status-indicator">●</span> <span id="backend-url">localhost:8000</span></p>
+            <p style="display: none;">Backend: <span id="backend-status" class="status-indicator">●</span> <span id="backend-url">localhost:8000</span></p>
         </footer>
     </div>
 
@@ -295,6 +517,7 @@
     <script src="drums.js"></script>
     <script src="key-helper.js"></script>
     <script src="soundfont-synth.js"></script>
+    <script src="modern-ui.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

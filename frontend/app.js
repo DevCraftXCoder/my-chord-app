@@ -13,6 +13,59 @@ function sanitizeHTML(str) {
 let progression = [];
 let currentEditIndex = null;
 let isPlaying = false;
+let isPaused = false;
+let pausedChordData = null;
+let pausedChordIndex = 0;
+
+// Local chord generation (fallback when backend is not available)
+function generateChordLocally(root, chordType) {
+    // Note to MIDI mapping
+    const noteToMidi = {
+        'C': 60, 'C#': 61, 'D': 62, 'D#': 63, 'E': 64, 'F': 65,
+        'F#': 66, 'G': 67, 'G#': 68, 'A': 69, 'A#': 70, 'B': 71
+    };
+
+    const rootMidi = noteToMidi[root];
+    if (!rootMidi) return null;
+
+    // Chord intervals (semitones from root)
+    const chordIntervals = {
+        'Major': [0, 4, 7],
+        'Minor': [0, 3, 7],
+        'Dim': [0, 3, 6],
+        'Aug': [0, 4, 8],
+        '5': [0, 7],
+        'Sus2': [0, 2, 7],
+        'Sus4': [0, 5, 7],
+        '7': [0, 4, 7, 10],
+        'Maj7': [0, 4, 7, 11],
+        'Min7': [0, 3, 7, 10],
+        'Dim7': [0, 3, 6, 9],
+        'Min7b5': [0, 3, 6, 10],
+        'Aug7': [0, 4, 8, 10],
+        'MinMaj7': [0, 3, 7, 11],
+        '9': [0, 4, 7, 10, 14],
+        'Maj9': [0, 4, 7, 11, 14],
+        'Min9': [0, 3, 7, 10, 14],
+        'Add9': [0, 4, 7, 14],
+        '11': [0, 4, 7, 10, 14, 17],
+        'Maj11': [0, 4, 7, 11, 14, 17],
+        'Min11': [0, 3, 7, 10, 14, 17],
+        '13': [0, 4, 7, 10, 14, 17, 21],
+        'Maj13': [0, 4, 7, 11, 14, 17, 21],
+        'Min13': [0, 3, 7, 10, 14, 17, 21],
+        '6': [0, 4, 7, 9],
+        'Min6': [0, 3, 7, 9],
+        '6/9': [0, 4, 7, 9, 14],
+        '7b5': [0, 4, 6, 10],
+        '7#5': [0, 4, 8, 10],
+        '7b9': [0, 4, 7, 10, 13],
+        '7#9': [0, 4, 7, 10, 15]
+    };
+
+    const intervals = chordIntervals[chordType] || chordIntervals['Major'];
+    return intervals.map(interval => rootMidi + interval);
+}
 
 // SoundFont Synthesizer
 let audioSynth = null;
@@ -205,6 +258,27 @@ async function handlePlay() {
         return;
     }
 
+    // If paused, resume playback
+    if (isPaused) {
+        isPaused = false;
+        isPlaying = true;
+        playBtn.disabled = true;
+        stopBtn.disabled = false;
+        updateStatus('Resumed', 'success');
+
+        // Resume drums if enabled
+        if (drumsEnabled && drumsEnabled.checked && drumTrack) {
+            const bpm = parseInt(bpmSlider.value);
+            drumTrack.start(bpm);
+        }
+
+        // Resume playback from paused position
+        const bpm = parseInt(bpmSlider.value);
+        const loop = loopCheckbox.checked;
+        playProgressionFromPause(bpm, loop);
+        return;
+    }
+
     // Initialize audio on first play (requires user interaction)
     console.log('[App] Checking audio initialization...');
     if (!audioSynth.isInitialized) {
@@ -224,6 +298,7 @@ async function handlePlay() {
     const loop = loopCheckbox.checked;
 
     isPlaying = true;
+    isPaused = false;
     playBtn.disabled = true;
     stopBtn.disabled = false;
     updateStatus(`Playing ${loop ? '(looping)' : ''}`, 'success');
@@ -241,49 +316,175 @@ async function handlePlay() {
 }
 
 async function playProgression(bpm, loop) {
-    do {
-        for (let i = 0; i < progression.length; i++) {
-            if (!isPlaying) break;
+    const secondsPerBeat = 60 / bpm;
 
-            const chord = progression[i];
+    // Pre-fetch all chord notes ONCE to avoid timing delays
+    const chordData = [];
+    for (let i = 0; i < progression.length; i++) {
+        const chord = progression[i];
+        let midiNotes;
 
-            // Get MIDI notes for this chord from backend
-            try {
-                const response = await fetch(`${API_BASE_URL}/generate-chord`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        root: chord.root,
-                        chord_type: chord.chord_type
-                    })
-                });
+        try {
+            const response = await fetch(`${API_BASE_URL}/generate-chord`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    root: chord.root,
+                    chord_type: chord.chord_type
+                })
+            });
 
+            if (response.ok) {
                 const data = await response.json();
-                const midiNotes = data.midi_notes;
+                midiNotes = data.midi_notes;
+            } else {
+                midiNotes = generateChordLocally(chord.root, chord.chord_type);
+            }
+        } catch (error) {
+            midiNotes = generateChordLocally(chord.root, chord.chord_type);
+        }
 
-                // Calculate duration in seconds
-                const secondsPerBeat = 60 / bpm;
-                const duration = secondsPerBeat * chord.beats;
+        chordData.push({
+            midiNotes,
+            duration: secondsPerBeat * chord.beats,
+            index: i
+        });
+    }
 
-                console.log(`[App] Playing ${chord.root}${chord.chord_type}: notes ${midiNotes}, duration ${duration}s`);
+    // Save chord data for pause/resume
+    pausedChordData = chordData;
+    pausedChordIndex = 0;
 
-                // Play the chord with Web Audio
-                audioSynth.playChord(midiNotes, duration);
+    // Calculate total loop duration
+    const loopDuration = chordData.reduce((sum, c) => sum + c.duration, 0);
 
-                // Highlight current chord
-                highlightChord(i);
+    // Start scheduling from current time with small buffer
+    let scheduleTime = audioSynth.audioContext.currentTime + 0.1;
 
-                // Wait for chord duration
-                await sleep(duration * 1000);
+    do {
+        // Schedule chords one at a time with checks in between
+        for (let i = 0; i < chordData.length; i++) {
+            if (!isPlaying) {
+                // Save position when paused
+                pausedChordIndex = i;
+                return;
+            }
 
-            } catch (error) {
-                console.error('Error playing chord:', error);
+            const { midiNotes, duration, index } = chordData[i];
+
+            if (!midiNotes) {
+                console.error('[App] Could not generate notes for chord');
+                continue;
+            }
+
+            const chord = progression[index];
+            console.log(`[App] Scheduling ${chord.root}${chord.chord_type} at ${scheduleTime.toFixed(3)}s (now: ${audioSynth.audioContext.currentTime.toFixed(3)}s), duration ${duration.toFixed(3)}s`);
+
+            // Use 85% of duration for clear gap between chords (prevents overlap)
+            const actualDuration = duration * 0.85;
+
+            // Schedule the chord to play at precise time
+            audioSynth.playChord(midiNotes, actualDuration, scheduleTime);
+
+            // Schedule highlight update with accurate delay
+            const highlightDelay = (scheduleTime - audioSynth.audioContext.currentTime) * 1000;
+            setTimeout(() => {
+                if (isPlaying) highlightChord(index);
+            }, Math.max(0, highlightDelay));
+
+            scheduleTime += duration;
+
+            // Small wait to allow pause to interrupt
+            await sleep(50);
+            if (!isPlaying) {
+                pausedChordIndex = i + 1;
+                return;
             }
         }
+
+        // Wait until halfway through the current loop before scheduling next loop
+        // This ensures smooth looping without gaps
+        const waitTime = loopDuration * 0.5;
+        await sleep(waitTime * 1000);
+
+        if (!isPlaying) return;
     } while (isPlaying && loop);
 
-    // Auto-stop if not looping
+    // If not looping, wait for the last scheduled notes to finish
     if (!loop) {
+        const remainingTime = scheduleTime - audioSynth.audioContext.currentTime;
+        if (remainingTime > 0) {
+            await sleep(remainingTime * 1000);
+        }
+        handleStop();
+    }
+}
+
+// Resume playback from paused position
+async function playProgressionFromPause(bpm, loop) {
+    if (!pausedChordData) {
+        // No saved state, start from beginning
+        playProgression(bpm, loop);
+        return;
+    }
+
+    const secondsPerBeat = 60 / bpm;
+    const chordData = pausedChordData;
+    const loopDuration = chordData.reduce((sum, c) => sum + c.duration, 0);
+
+    // Start scheduling from current time with small buffer
+    let scheduleTime = audioSynth.audioContext.currentTime + 0.1;
+
+    do {
+        // Schedule from paused position with checks in between
+        for (let i = pausedChordIndex; i < chordData.length; i++) {
+            if (!isPlaying) {
+                pausedChordIndex = i;
+                return;
+            }
+
+            const { midiNotes, duration, index } = chordData[i];
+
+            if (!midiNotes) {
+                console.error('[App] Could not generate notes for chord');
+                continue;
+            }
+
+            const chord = progression[index];
+            console.log(`[App] Scheduling ${chord.root}${chord.chord_type} at ${scheduleTime.toFixed(3)}s`);
+
+            const actualDuration = duration * 0.85;
+            audioSynth.playChord(midiNotes, actualDuration, scheduleTime);
+
+            const highlightDelay = (scheduleTime - audioSynth.audioContext.currentTime) * 1000;
+            setTimeout(() => {
+                if (isPlaying) highlightChord(index);
+            }, Math.max(0, highlightDelay));
+
+            scheduleTime += duration;
+
+            // Small wait to allow pause to interrupt
+            await sleep(50);
+            if (!isPlaying) {
+                pausedChordIndex = i + 1;
+                return;
+            }
+        }
+
+        // Reset to beginning for next loop
+        pausedChordIndex = 0;
+
+        const waitTime = loopDuration * 0.5;
+        await sleep(waitTime * 1000);
+
+        if (!isPlaying) return;
+    } while (isPlaying && loop);
+
+    if (!loop) {
+        const remainingTime = scheduleTime - audioSynth.audioContext.currentTime;
+        if (remainingTime > 0) {
+            await sleep(remainingTime * 1000);
+        }
         handleStop();
     }
 }
@@ -300,8 +501,31 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+// Pause function
+function handlePause() {
+    isPlaying = false;
+    isPaused = true;
+    playBtn.disabled = false;
+    stopBtn.disabled = true;
+    updateStatus('Paused', 'info');
+
+    // Stop all currently playing audio
+    if (audioSynth) {
+        audioSynth.stopAll();
+    }
+
+    // Pause drums
+    if (drumTrack) {
+        drumTrack.stop();
+    }
+}
+
+// Stop function (full stop, resets to beginning)
 async function handleStop() {
     isPlaying = false;
+    isPaused = false;
+    pausedChordData = null;
+    pausedChordIndex = 0;
     playBtn.disabled = false;
     stopBtn.disabled = true;
     updateStatus('Stopped', 'info');
@@ -466,13 +690,73 @@ function loadPreset() {
     updateStatus(`Loaded ${preset.name}`, 'success');
 }
 
-// Load Random Good Progression
+// Load Random Good Progression - Musical chord progressions that sound good
 function loadRandomProgression() {
-    const randomIndex = Math.floor(Math.random() * popularProgressions.length);
-    const preset = popularProgressions[randomIndex];
-    progression = [...preset.chords];
+    // Common musical chord progressions (in C major key)
+    const goodProgressions = [
+        // Pop progressions
+        [
+            { root: 'C', chord_type: 'Major', beats: 4 },
+            { root: 'G', chord_type: 'Major', beats: 4 },
+            { root: 'A', chord_type: 'Minor', beats: 4 },
+            { root: 'F', chord_type: 'Major', beats: 4 }
+        ],
+        [
+            { root: 'C', chord_type: 'Major', beats: 4 },
+            { root: 'F', chord_type: 'Major', beats: 4 },
+            { root: 'G', chord_type: 'Major', beats: 4 }
+        ],
+        [
+            { root: 'A', chord_type: 'Minor', beats: 4 },
+            { root: 'F', chord_type: 'Major', beats: 4 },
+            { root: 'C', chord_type: 'Major', beats: 4 },
+            { root: 'G', chord_type: 'Major', beats: 4 }
+        ],
+        [
+            { root: 'C', chord_type: 'Major', beats: 4 },
+            { root: 'A', chord_type: 'Minor', beats: 4 },
+            { root: 'F', chord_type: 'Major', beats: 4 },
+            { root: 'G', chord_type: 'Major', beats: 4 }
+        ],
+        // Simple 3-chord progressions
+        [
+            { root: 'C', chord_type: 'Major', beats: 4 },
+            { root: 'F', chord_type: 'Major', beats: 4 },
+            { root: 'G', chord_type: 'Major', beats: 4 }
+        ],
+        [
+            { root: 'A', chord_type: 'Minor', beats: 4 },
+            { root: 'F', chord_type: 'Major', beats: 4 },
+            { root: 'G', chord_type: 'Major', beats: 4 }
+        ],
+        [
+            { root: 'D', chord_type: 'Minor', beats: 4 },
+            { root: 'G', chord_type: 'Major', beats: 4 },
+            { root: 'C', chord_type: 'Major', beats: 4 }
+        ],
+        [
+            { root: 'E', chord_type: 'Minor', beats: 4 },
+            { root: 'A', chord_type: 'Minor', beats: 4 },
+            { root: 'F', chord_type: 'Major', beats: 4 },
+            { root: 'G', chord_type: 'Major', beats: 4 }
+        ]
+    ];
+
+    // Pick a random progression
+    const randomProg = goodProgressions[Math.floor(Math.random() * goodProgressions.length)];
+    progression = [...randomProg];
     updateProgressionDisplay();
-    updateStatus(`Loaded ${preset.name} in ${preset.key}`, 'success');
+    updateStatus(`Generated ${progression.length}-chord progression`, 'success');
+}
+
+// Clear all chords
+function clearProgression() {
+    if (isPlaying) {
+        handleStop();
+    }
+    progression = [];
+    updateProgressionDisplay();
+    updateStatus('Progression cleared', 'success');
 }
 
 // Export for use in HTML onclick attributes
